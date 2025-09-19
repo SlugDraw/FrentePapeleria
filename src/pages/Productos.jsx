@@ -1,74 +1,81 @@
-import { useQuery } from "@tanstack/react-query";
-import {
-  ProductosTemplate,
-  Spinner1,
-  useAlmacenesStore,
-  useCategoriasStore,
-  useEmpresaStore,
-  useProductosStore,
-  useSucursalesStore,
-} from "../index";
+import { useEffect, useState } from "react";
+import DataTableProductos from "../components/tables/ProductosTabla";
 
-export function Productos() {
-  const {mostrarCategorias} = useCategoriasStore();
-  const {mostrarSucursales} = useSucursalesStore();
-  const {} =useAlmacenesStore()
-  const { mostrarProductos, buscarProductos, buscador,setRefetch } =
-    useProductosStore();
-  const { dataempresa } = useEmpresaStore();
-  const {
-    data: productos,
-    isLoading: isLoadingProductos,
-    error: errorProductos,
-    refetch,
-  } = useQuery({
-    queryKey: ["mostrar productos", dataempresa?.id],
-    queryFn: () => mostrarProductos({ id_empresa: dataempresa?.id, refetchs: refetch }),
-    enabled: !!dataempresa,
-    refetchOnWindowFocus: false,
-  });
-  
-  // Buscar categorías
-  const { isLoading: isLoadingBuscarProductos } = useQuery({
-    queryKey: ["buscar productos", buscador],
-    queryFn: () => buscarProductos({ id_empresa: dataempresa?.id, buscador: buscador }),
-    enabled: !!dataempresa,
-    refetchOnWindowFocus: false,
-  });
-  
-  // Mostrar sucursales
-  const { isLoading: isLoadingSucursales } = useQuery({
-    queryKey: ["mostrar sucursales", dataempresa?.id],
-    queryFn: () => mostrarSucursales({ id_empresa: dataempresa?.id }),
-    enabled: !!dataempresa,
-    refetchOnWindowFocus: false,
-  });
-  // Mostrar almacenes por sucursal
-  const { isLoading: isLoadingAlmacenes } = useQuery({
-    queryKey: ["mostrar almacenes x sucursal", dataempresa?.id],
-    queryFn: () => mostrarSucursales({ id_empresa: dataempresa?.id }),
-    enabled: !!dataempresa,
-    refetchOnWindowFocus: false,
-  });
-  // Mostrar categorías
-  const { isLoading: isLoadingCategorias } = useQuery({
-    queryKey: ["mostrar categorias", dataempresa?.id],
-    queryFn: () => mostrarCategorias({ id_empresa: dataempresa?.id }),
-    enabled: !!dataempresa,
-    refetchOnWindowFocus: false,
-  });
-  
-  // Consolidación de isLoading y error
-  const isLoading = isLoadingProductos  || isLoadingSucursales || isLoadingCategorias;
-  const error = errorProductos;
-  
-  if (isLoading) {
-    return <Spinner1 />;
-  }
-  
-  if (error) {
-    return <span>Error: {error.message}</span>;
-  }
-  
-  return <ProductosTemplate />;
-}
+const Productos = () => {
+  const [productos, setProductos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProductos = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:8080/api/v1/products", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) throw new Error("Error al obtener productos");
+
+        const data = await res.json();
+        setProductos(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductos();
+  }, []);
+
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:8080/api/v1/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ nombre, precio, stock }),
+      });
+
+      if (!res.ok) throw new Error("Error al agregar producto");
+
+      const newProduct = await res.json();
+      setProductos([...productos, newProduct]);
+      setShowForm(false);
+      setNombre("");
+      setPrecio("");
+      setStock("");
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Productos</h1>
+        </div>
+      </div>
+
+      {loading ? (
+        <p className="mt-6">Cargando productos...</p>
+      ) : error ? (
+        <p className="mt-6 text-red-500">Error: {error}</p>
+      ) : (
+        <div className="mt-6 overflow-x-auto">
+          <DataTableProductos data={productos} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Productos;

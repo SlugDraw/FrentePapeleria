@@ -1,50 +1,15 @@
-import styled, { ThemeProvider } from "styled-components";
-import {
-  AuthContextProvider,
-  Dark,
-  GlobalStyles,
-  Light,
-  MyRoutes,
-  useThemeStore,
-  useUsuariosStore,
-} from "./index";
-import { Device } from "./styles/breakpoints";
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "./context/Authcontext";
+import Sidebar from "./components/SideBar";
+import Layout from "./components/Layout";
 
-function App() {
-  const { setTheme } = useThemeStore();
-  const { datausuarios } = useUsuariosStore();
-  const location = useLocation();
-  const themeStyle = datausuarios?.tema ==="light"?Light:Dark
-  useEffect(() => {
-    if (location.pathname === "/login") {
-      setTheme({
-        tema: "light",
-        style: Light,
-      });
-    } else {
-      if (datausuarios) {
-        const themeStyle = datausuarios?.tema === "light" ? Light : Dark;
-        setTheme({
-          tema: datausuarios?.tema,
-          style: themeStyle,
-        });
-      }
-    }
-  }, [datausuarios]);
+export default function App() {
   return (
-    <ThemeProvider theme={themeStyle}>
-      <AuthContextProvider>
-        <GlobalStyles />
-
-        <MyRoutes />
-
-        <ReactQueryDevtools initialIsOpen={true} />
-      </AuthContextProvider>
-    </ThemeProvider>
+    <AuthProvider>
+      <BrowserRouter>
+        <Sidebar />
+        <Layout />
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
-
-export default App;
