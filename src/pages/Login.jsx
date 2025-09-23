@@ -1,64 +1,47 @@
 import { useAuth } from "../context/Authcontext";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { Form, Input, Button } from "antd";
 import Swal from "sweetalert2";
+import { useMutation } from "@tanstack/react-query";
+import { loginEmail } from "../querys/userQuerys";
 
 export default function Login() {
+  const [form] = Form.useForm();
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
 
-  const handleLogin = async () => {
-    if (username.trim() === "") {
-      return Swal.fire({
-        icon: "warning",
-        title: "Campo requerido",
-        text: "Ingresa tu nombre",
-      });
-    }
-    if (password.trim() === "") {
-      return Swal.fire({
-        icon: "warning",
-        title: "Campo requerido",
-        text: "Ingresa tu contraseña",
-      });
-    }
-    try {
-      const response = await fetch("http://localhost:8080/api/v1/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        return Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: errorData.message || "Error al iniciar sesión",
-        });
-      }
-
-      const data = await response.json();
-      console.log(data);
+  const { mutate, isLoading } = useMutation({
+    mutationKey: ["iniciar-sesion"],
+    mutationFn: loginEmail,
+    onSuccess: (data) => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.user.username);
       login(`${data.user.nombre} ${data.user.apellidos}`);
       navigate("/dashboard");
-    } catch (error) {
+    },
+    onError: (error) => {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "No se pudo conectar con el servidor",
+        text: error.message,
       });
-      return;
+    },
+  });
+
+  const handleLogin = async () => {
+    try {
+      const { username, password } = await form.validateFields();
+      mutate({ username, password });
+    } catch {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Por favor complete todos los campos",
+      });
     }
   };
 
-  // Evitar bucles de redirección
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/dashboard");
@@ -67,28 +50,46 @@ export default function Login() {
 
   return (
     <div className="h-screen flex items-center justify-center bg-gray-100">
+      {isLoading && <Loader />}
       <div className="bg-white shadow-lg rounded-xl p-8 w-80">
         <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
-        <input
-          type="text"
-          placeholder="Nombre de usuario"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-2 border rounded mb-4"
-        />
-        <input
-          type="password"
-          placeholder="Ingrese su contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 border rounded mb-4"
-        />
-        <button
-          onClick={handleLogin}
-          className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          Iniciar sesión
-        </button>
+
+        <Form form={form} layout="vertical" onFinish={handleLogin}>
+          <Form.Item
+            name="username"
+            rules={[
+              { required: true, message: "Por favor ingrese su usuario" },
+            ]}
+          >
+            <Input
+              placeholder="Nombre de usuario"
+              className="w-full p-2 border rounded mb-4"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="password"
+            rules={[
+              { required: true, message: "Por favor ingrese su contraseña" },
+            ]}
+          >
+            <Input.Password
+              placeholder="Ingrese su contraseña"
+              className="w-full p-2 border rounded mb-4"
+            />
+          </Form.Item>
+
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              loading={isLoading} // usa el estado de la mutación
+            >
+              Iniciar sesión
+            </Button>
+          </Form.Item>
+        </Form>
       </div>
     </div>
   );

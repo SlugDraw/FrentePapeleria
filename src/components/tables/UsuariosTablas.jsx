@@ -1,42 +1,47 @@
-import { useState } from "react";
 import { Table, Input, Select, Space, Dropdown, Button, message } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import ModalUsuario from "../modals/ModalUsuario";
 import Swal from "sweetalert2";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { eliminarUsuario } from "../../querys/userQuerys";
+import { useState } from "react";
+
 const { Search } = Input;
 const { Option } = Select;
 
 const UsuariosTabla = ({ data }) => {
-  const [usuarios, setUsuarios] = useState(data);
   const [usernameFilter, setUsernameFilter] = useState("");
   const [rolFilter, setRolFilter] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [idEdicion, setIdedicion] = useState(0);
 
-  const handleAddUser = () => {
-    setEditingUser(null);
-    setModalVisible(true);
-  };
+  const queryClient = useQueryClient();
 
-  const handleOk = async (values) => {
-    if (editingUser) {
-      setUsuarios((prev) =>
-        prev.map((u) => (u.id === editingUser.id ? values : u))
-      );
-    } else {
-      setUsuarios((prev) => [...prev, values]);
-    }
+  const { mutate: deleteUser } = useMutation({
+    mutationKey: ["eliminarUsuario"],
+    mutationFn: eliminarUsuario,
+    onSuccess: (_, username) => {
+      queryClient.invalidateQueries({ queryKey: ["usuarios"] }); // 👈 fuerza refetch
+      Swal.fire({
+        icon: "success",
+        title: `Usuario ${username} eliminado correctamente`,
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    },
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
+        localStorage.removeItem("token");
+        navigate("/");
+      } else {
+        Swal.fire("Error", error.message, "error");
+      }
+    },
+  });
 
-    setModalVisible(false);
-  };
-
-  const handleCancel = () => {
-    setModalVisible(false);
-  };
-
-  // Nuevo hook para eliminar usuario
-  const handleDelete = async (username) => {
+  const handleDelete = (username) => {
     Swal.fire({
       title: "¿Estás seguro?",
       text: "Esta acción eliminará el usuario permanentemente.",
@@ -44,45 +49,17 @@ const UsuariosTabla = ({ data }) => {
       showCancelButton: true,
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
-    }).then(async (result) => {
+    }).then((result) => {
       if (result.isConfirmed) {
-        try {
-          const token = localStorage.getItem("token");
-          const url = `http://localhost:8080/api/v1/users/${username}`;
-
-          const response = await fetch(url, {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Error al eliminar usuario:", errorData);
-            message.error("Error al eliminar usuario");
-            return;
-          }
-
-          setUsuarios((prev) => prev.filter((u) => u.username !== username));
-          Swal.fire({
-            icon: "success",
-            title: "Usuario eliminado correctamente",
-            showConfirmButton: false,
-            timer: 1500,
-          });
-        } catch (error) {
-          console.error("Error en la petición:", error);
-          message.error("Error al eliminar usuario");
-        }
+        deleteUser(username);
       }
     });
   };
 
-  // Roles únicos
-  const rolesUnicos = Array.from(new Set(usuarios.map((u) => u.rol)));
+  data = Array.isArray(data) ? data : data?.content ?? [];
+  const rolesUnicos = Array.from(new Set(data.map((u) => u.rol)));
 
-  const filteredData = usuarios.filter((u) => {
+  const filteredData = data.filter((u) => {
     const matchUsername = u.username
       .toLowerCase()
       .includes(usernameFilter.toLowerCase());
@@ -105,10 +82,7 @@ const UsuariosTabla = ({ data }) => {
                 key: "1",
                 label: "Editar",
                 onClick: () => {
-                  const userToEdit = usuarios.find(
-                    (u) => u.username === record.username
-                  );
-                  setEditingUser(userToEdit);
+                  setEditingUser(record);
                   setModalVisible(true);
                 },
               },
@@ -160,7 +134,7 @@ const UsuariosTabla = ({ data }) => {
           </Select>
         </Space>
 
-        <Button type="primary" onClick={handleAddUser}>
+        <Button type="primary" onClick={() => setModalVisible(true)}>
           Agregar usuario
         </Button>
       </Space>
@@ -174,8 +148,15 @@ const UsuariosTabla = ({ data }) => {
 
       <ModalUsuario
         visible={modalVisible}
-        onCancel={handleCancel}
-        onOk={handleOk}
+        onCancel={() => {
+          setModalVisible(false);
+          setEditingUser(null);
+          setIdedicion(0);
+        }}
+        onOk={() => {
+          setModalVisible(false), setEditingUser(null);
+          setIdedicion(0);
+        }}
         initialValues={editingUser}
         idedicion={idEdicion}
       />

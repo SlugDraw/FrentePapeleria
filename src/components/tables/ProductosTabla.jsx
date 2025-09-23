@@ -1,44 +1,44 @@
 import { useState } from "react";
-import { Table, Input, Select, Space, Dropdown, Button, message } from "antd";
+import { Table, Input, Space, Dropdown, Button } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import ModalProducto from "../modals/ModalProducto";
 import Swal from "sweetalert2";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { eliminarProducto } from "../../querys/productQuerys";
+
 const { Search } = Input;
-const { Option } = Select;
 
 const ProductosTabla = ({ data }) => {
-  console.log(data);
-
-  const [productos, setProductos] = useState(data);
   const [nombreFilter, setNombreFilter] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [idEdicion, setIdedicion] = useState(0);
 
-  const handleAddUser = () => {
-    setEditingProduct(null);
-    setModalVisible(true);
-  };
-  const handleOk = async (values) => {
-    if (editingProduct) {
-      setProductos((prev) =>
-        prev.map((u) => (u.id === editingProduct.id ? values : u))
-      );
-    } else {
-      setProductos((prev) => [...prev, values]);
-    }
+  const queryClient = useQueryClient();
 
-    setModalVisible(false);
-  };
-
-  const handleCancel = () => {
-    setModalVisible(false);
-  };
-
-  const filteredData = productos.filter((u) => {
-    return u.nombre.toLowerCase().includes(nombreFilter.toLowerCase());
+  // Mutación para eliminar
+  const { mutate: deleteProduct } = useMutation({
+    mutationFn: eliminarProducto,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["productos"]);
+      Swal.fire({
+        icon: "success",
+        title: "Producto eliminado",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    },
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
+        localStorage.removeItem("token");
+        navigate("/");
+      } else {
+        Swal.fire({ icon: "error", title: "Error", text: error.message });
+      }
+    },
   });
-  const handleDelete = async (id) => {
+
+  const handleDelete = (id) => {
     Swal.fire({
       title: "¿Estás seguro?",
       text: "Esta acción eliminará el producto permanentemente.",
@@ -46,43 +46,18 @@ const ProductosTabla = ({ data }) => {
       showCancelButton: true,
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const token = localStorage.getItem("token");
-          const url = `http://localhost:8080/api/v1/products/${id}`;
-
-          const response = await fetch(url, {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Error al eliminar producto:", errorData);
-            console.error("Error al eliminar producto");
-            return;
-          }
-
-          setProductos((prev) => prev.filter((u) => u.id !== id));
-          Swal.fire({
-            icon: "success",
-            title: "Producto eliminado correctamente",
-            showConfirmButton: false,
-            timer: 1500,
-          });
-        } catch (error) {
-          console.error("Error en la petición:", error);
-          console.error("Error al eliminar producto");
-        }
-      }
+    }).then((result) => {
+      if (result.isConfirmed) deleteProduct(id);
     });
   };
 
+  const filteredData = data.filter((u) =>
+    u.nombre.toLowerCase().includes(nombreFilter.toLowerCase())
+  );
+
   const columns = [
     { title: "Nombre", dataIndex: "nombre", key: "nombre" },
+    { title: "Descripción", dataIndex: "descripcion", key: "descripcion" },
     { title: "Precio", dataIndex: "precio", key: "precio" },
     { title: "Stock", dataIndex: "stock", key: "stock" },
     {
@@ -96,24 +71,19 @@ const ProductosTabla = ({ data }) => {
                 key: "1",
                 label: "Editar",
                 onClick: () => {
-                  const productToEdit = productos.find(
-                    (p) => p.nombre === record.nombre
-                  );
-                  setEditingProduct(productToEdit);
+                  setEditingProduct(record);
                   setModalVisible(true);
                 },
               },
               {
                 key: "2",
+                label: "Imprimir código",
+                onClick: () => console.log(record.code),
+              },
+              {
+                key: "3",
                 label: <span style={{ color: "red" }}>Eliminar</span>,
-                onClick: () => {
-                  const productToEdit = productos.find(
-                    (p) => p.nombre === record.nombre
-                  );
-                  console.log(productToEdit);
-
-                  handleDelete(productToEdit.id);
-                },
+                onClick: () => handleDelete(record.id),
               },
             ],
           }}
@@ -135,16 +105,14 @@ const ProductosTabla = ({ data }) => {
           width: "100%",
         }}
       >
-        <Space>
-          <Search
-            placeholder="Filtrar por nombre"
-            value={nombreFilter}
-            onChange={(e) => setNombreFilter(e.target.value)}
-            style={{ width: 200 }}
-          />
-        </Space>
+        <Search
+          placeholder="Filtrar por nombre"
+          value={nombreFilter}
+          onChange={(e) => setNombreFilter(e.target.value)}
+          style={{ width: 200 }}
+        />
 
-        <Button type="primary" onClick={handleAddUser}>
+        <Button type="primary" onClick={() => setModalVisible(true)}>
           Agregar producto
         </Button>
       </Space>
@@ -152,16 +120,21 @@ const ProductosTabla = ({ data }) => {
       <Table
         columns={columns}
         dataSource={filteredData}
-        rowKey="nombre"
+        rowKey="id"
         pagination={{ pageSize: 10 }}
       />
 
       <ModalProducto
         visible={modalVisible}
-        onCancel={handleCancel}
-        onOk={handleOk}
+        onCancel={() => {
+          setModalVisible(false);
+          setEditingProduct(null);
+        }}
+        onOk={() => {
+          setModalVisible(false);
+          setEditingProduct(null);
+        }}
         initialValues={editingProduct}
-        idEdicion={idEdicion}
       />
     </div>
   );

@@ -7,6 +7,7 @@ import {
   Menu,
   User,
   NotebookText,
+  Printer,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -56,6 +57,14 @@ export default function Sidebar() {
         >
           <User size={20} />
           {!isCollapsed && <span>Usuarios</span>}
+        </Link>
+
+        <Link
+          to="/impresoras"
+          className="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 rounded-md"
+        >
+          <Printer size={20} />
+          {!isCollapsed && <span>Impresoras</span>}
         </Link>
 
         <Link

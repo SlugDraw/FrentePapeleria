@@ -1,0 +1,71 @@
+import { API_URL } from "./const";
+
+const listarProductos = async () => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/products`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error("Error al obtener productos");
+  return res.json();
+};
+
+const crearProducto = async ({ code, nombre, descripcion, precio, stock }) => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/products`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ code, nombre, descripcion, precio, stock }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "Error al crear producto");
+  }
+  return res.json();
+};
+
+const actualizarProducto = async ({
+  id,
+  code,
+  nombre,
+  descripcion,
+  precio,
+  stock,
+}) => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/products/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ code, nombre, descripcion, precio, stock }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "Error al actualizar producto");
+  }
+  return res.json();
+};
+
+const eliminarProducto = async (id) => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/products/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "Error al eliminar producto");
+  }
+  return { id };
+};
+
+export { listarProductos, crearProducto, actualizarProducto, eliminarProducto };

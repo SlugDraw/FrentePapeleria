@@ -1,18 +1,70 @@
 import { useEffect } from "react";
 import { Modal, Form, Input, Select } from "antd";
 import Swal from "sweetalert2";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Loader from "../../utils/Loader"; // loader pantalla completa
+import { crearUsuario, actualizarUsuario } from "../../querys/userQuerys"; // 👈 import actualizado
 
-const ModalUsuario = ({ visible, onCancel, onOk, initialValues }) => {
+const ModalUsuario = ({ visible, onCancel, initialValues }) => {
   const [form] = Form.useForm();
+  const queryClient = useQueryClient();
 
+  // --- Mutations ---
+  const { mutate: crearUsuarioMutate, isLoading: creating } = useMutation({
+    mutationKey: ["crear-usuario"],
+    mutationFn: crearUsuario,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["usuarios"]);
+      Swal.fire({
+        icon: "success",
+        title: "Usuario creado correctamente",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      form.resetFields();
+    },
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
+        localStorage.removeItem("token");
+        navigate("/");
+      } else {
+        Swal.fire({ icon: "error", title: "Error", text: error.message });
+      }
+    },
+  });
+
+  const { mutate: actualizarUsuarioMutate, isLoading: updating } = useMutation({
+    mutationKey: ["actualizar-usuario"],
+    mutationFn: actualizarUsuario,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["usuarios"]);
+      Swal.fire({
+        icon: "success",
+        title: "Usuario actualizado correctamente",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      form.resetFields();
+    },
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
+        localStorage.removeItem("token");
+        navigate("/");
+      } else {
+        Swal.fire({ icon: "error", title: "Error", text: error.message });
+      }
+    },
+  });
+
+  // --- Cargar valores iniciales ---
   useEffect(() => {
     if (visible) {
-      console.log(initialValues);
-
       form.setFieldsValue(
         initialValues || {
           nombre: "",
-          apellids: "",
+          apellidos: "",
           username: "",
           password: "",
           rol: "",
@@ -21,68 +73,19 @@ const ModalUsuario = ({ visible, onCancel, onOk, initialValues }) => {
     }
   }, [visible, initialValues, form]);
 
+  // --- Botón OK ---
   const handleOk = async () => {
     try {
-      const values = await form.validateFields(); // valida todos los campos
-
-      // Enviar los datos al backend
-      const token = localStorage.getItem("token"); // o donde tengas el token
+      const values = await form.validateFields();
       if (initialValues) {
-        values.id = initialValues.id;
-      } // Asegúrate de que el ID esté incluido en los valores
-
-      if (initialValues && !values.password) {
-        delete values.password;
+        actualizarUsuarioMutate({ id: initialValues.id, ...values });
+      } else {
+        crearUsuarioMutate(values);
       }
-
-      console.log(JSON.stringify(values));
-
-      const response = initialValues
-        ? await fetch(`http://localhost:8080/api/v1/users/${values.id}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`, // si tu backend requiere token
-            },
-            body: JSON.stringify(values),
-          })
-        : await fetch("http://localhost:8080/api/v1/auth/register", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`, // si tu backend requiere token
-            },
-            body: JSON.stringify(values),
-          });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        Swal.fire({
-          icon: "error",
-          title: "Error al crear usuario",
-          text:
-            errorData.message || "Ocurrió un error al registrar el usuario.",
-        });
-        return; // no resetear formulario si falla
-      }
-
-      const data = await response.json();
-      Swal.fire({
-        icon: "success",
-        title: initialValues
-          ? "Usuario actualizado correctamente"
-          : "Usuario creado correctamente",
-        text: initialValues
-          ? "El usuario ha sido actualizado correctamente"
-          : "El usuario ha sido registrado exitosamente.",
-        timer: 2000,
-        showConfirmButton: false,
-      });
-
-      onOk(values); // llamar a callback externo si lo necesitas
-      form.resetFields(); // limpiar formulario
+      form.resetFields();
+      onCancel();
     } catch (errorInfo) {
-      console.log("Validación fallida o error en request:", errorInfo);
+      console.log("Validación fallida:", errorInfo);
     }
   };
 
@@ -91,67 +94,75 @@ const ModalUsuario = ({ visible, onCancel, onOk, initialValues }) => {
     onCancel();
   };
 
+  const isLoading = creating || updating;
+
   return (
-    <Modal
-      open={visible}
-      title={initialValues ? "Editar Usuario" : "Crear Usuario"}
-      onCancel={handleCancel}
-      onOk={handleOk}
-      okText={initialValues ? "Actualizar" : "Crear"}
-      cancelText="Cancelar"
-    >
-      <Form form={form} layout="vertical">
-        <Form.Item
-          name="nombre"
-          label="Nombre"
-          rules={[{ required: true, message: "Por favor ingrese el nombre" }]}
-        >
-          <Input autoComplete="off" />
-        </Form.Item>
-        <Form.Item
-          name="apellidos"
-          label="Apellidos"
-          rules={[{ required: true, message: "Por favor ingrese un apellido" }]}
-        >
-          <Input autoComplete="off" />
-        </Form.Item>
-        <Form.Item
-          name="username"
-          label="Username"
-          rules={[{ required: true, message: "Por favor ingrese su username" }]}
-        >
-          <Input autoComplete="off" />
-        </Form.Item>
-        <Form.Item
-          name="password"
-          label="Contraseña"
-          rules={
-            initialValues
-              ? [] // no obligatorio si estamos editando
-              : [{ required: true, message: "Por favor ingrese la contraseña" }]
-          }
-        >
-          <Input.Password
-            placeholder={
+    <>
+      {isLoading && <Loader />} {/* Loader pantalla completa */}
+      <Modal
+        open={visible}
+        title={initialValues ? "Editar Usuario" : "Crear Usuario"}
+        onCancel={handleCancel}
+        onOk={handleOk}
+        okText={initialValues ? "Actualizar" : "Crear"}
+        cancelText="Cancelar"
+        confirmLoading={isLoading} // loader en el botón
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="nombre"
+            label="Nombre"
+            rules={[{ required: true, message: "Ingrese el nombre" }]}
+          >
+            <Input autoComplete="off" />
+          </Form.Item>
+
+          <Form.Item
+            name="apellidos"
+            label="Apellidos"
+            rules={[{ required: true, message: "Ingrese los apellidos" }]}
+          >
+            <Input autoComplete="off" />
+          </Form.Item>
+
+          <Form.Item
+            name="username"
+            label="Username"
+            rules={[{ required: true, message: "Ingrese el username" }]}
+          >
+            <Input autoComplete="off" />
+          </Form.Item>
+
+          <Form.Item
+            name="password"
+            label="Contraseña"
+            rules={
               initialValues
-                ? "Dejar vacío para mantener la contraseña actual"
-                : ""
+                ? []
+                : [{ required: true, message: "Ingrese la contraseña" }]
             }
-            autoComplete="off"
-          />
-        </Form.Item>
-        <Form.Item
-          name="rol"
-          label="Rol"
-          rules={[{ required: true, message: "Por favor seleccione un rol" }]}
-        >
-          <Select placeholder="Seleccione un rol">
-            <Select.Option value="admin">Administrador</Select.Option>
-            <Select.Option value="empleado">Empleado</Select.Option>
-          </Select>
-        </Form.Item>
-      </Form>
-    </Modal>
+          >
+            <Input.Password
+              placeholder={
+                initialValues ? "Dejar vacío para mantener actual" : ""
+              }
+              autoComplete="off"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="rol"
+            label="Rol"
+            rules={[{ required: true, message: "Seleccione un rol" }]}
+          >
+            <Select placeholder="Seleccione un rol">
+              <Select.Option value="admin">Administrador</Select.Option>
+              <Select.Option value="empleado">Empleado</Select.Option>
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
   );
 };
 

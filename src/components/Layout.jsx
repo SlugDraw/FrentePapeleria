@@ -5,6 +5,7 @@ import PrivateRoute from "../components/PrivateRoute";
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
 import Config from "../pages/Users";
+import Printers from "../pages/Printers";
 import Productos from "../pages/Productos";
 
 const Layout = () => {
@@ -34,6 +35,14 @@ const Layout = () => {
           element={
             <PrivateRoute>
               <Config />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/impresoras"
+          element={
+            <PrivateRoute>
+              <Printers />
             </PrivateRoute>
           }
         />
