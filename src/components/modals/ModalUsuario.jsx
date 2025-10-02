@@ -85,7 +85,11 @@ const ModalUsuario = ({ visible, onCancel, initialValues }) => {
       form.resetFields();
       onCancel();
     } catch (errorInfo) {
-      console.log("Validación fallida:", errorInfo);
+      Swal.fire({
+        icon: "error",
+        title: "Error de validación",
+        text: "Por favor, revisa los campos del formulario.",
+      });
     }
   };
 

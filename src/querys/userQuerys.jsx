@@ -23,8 +23,6 @@ const listarUsuarios = async () => {
   });
 
   if (!res.ok) {
-    console.log(res);
-
     const error = new Error("Error al obtener los usuarios");
     error.status = res.status;
     throw error;

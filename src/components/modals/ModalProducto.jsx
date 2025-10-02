@@ -120,7 +120,11 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
         crearProductoMutate(values);
       }
     } catch (error) {
-      console.log("Validación fallida:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error de validación",
+        text: "Por favor revisa los campos del formulario.",
+      });
     }
   };
 

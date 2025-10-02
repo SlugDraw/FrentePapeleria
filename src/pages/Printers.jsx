@@ -42,8 +42,6 @@ const Printers = () => {
     queryFn: getImpresoras,
     refetchOnWindowFocus: true,
     onSuccess: (data) => {
-      console.log(data);
-
       if (data) {
         setStatePrintDirecto(data.isDirecto || false);
         setSelectImpresora({ name: data.nombre || "seleccione una impresora" });
@@ -125,7 +123,6 @@ const Printers = () => {
       state: statePrintDirecto,
       name: statePrintDirecto ? selectImpresora : "seleccione una impresora",
     };
-    console.log(p);
 
     const retornado = await editarImpresoras(p);
     setIdImpresora(retornado.id);
@@ -134,10 +131,6 @@ const Printers = () => {
 
   useEffect(() => {
     if (impresoraGuardada) {
-      console.log("impresoraGuardada", impresoraGuardada);
-      console.log(`${impresoraGuardada.isDirecto}`);
-      console.log(`${impresoraGuardada.nombre}`);
-
       setStatePrintDirecto(impresoraGuardada.isDirecto || false);
       setSelectImpresora(
         impresoraGuardada.nombre || "seleccione una impresora"
@@ -148,7 +141,8 @@ const Printers = () => {
 
   const error = errorDatosPc;
 
-  if (isLoadingImpresoraCaja || isLocadingDatosPc) return <Loader></Loader>;
+  if (isLoadingImpresoraCaja || isLocadingDatosPc || isloadingImpresorasLocales)
+    return <Loader></Loader>;
   return (
     <div className="p-4 md:p-6">
       <Toaster />

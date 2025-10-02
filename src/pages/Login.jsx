@@ -16,8 +16,11 @@ export default function Login() {
     mutationFn: loginEmail,
     onSuccess: (data) => {
       localStorage.setItem("token", data.token);
-      localStorage.setItem("username", data.user.username);
-      login(`${data.user.nombre} ${data.user.apellidos}`);
+      login({
+        id: data.user.id,
+        nombre: `${data.user.nombre} ${data.user.apellidos}`,
+        rol: data.user.rol,
+      });
       navigate("/dashboard");
     },
     onError: (error) => {

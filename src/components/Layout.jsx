@@ -7,6 +7,8 @@ import Dashboard from "../pages/Dashboard";
 import Config from "../pages/Users";
 import Printers from "../pages/Printers";
 import Productos from "../pages/Productos";
+import Caja from "../pages/Caja";
+import CajaAbierta from "../pages/CajaAbierta";
 
 const Layout = () => {
   const { isAuthenticated } = useAuth();
@@ -51,6 +53,22 @@ const Layout = () => {
           element={
             <PrivateRoute>
               <Productos />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/caja"
+          element={
+            <PrivateRoute>
+              <Caja />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/caja/:idCaja"
+          element={
+            <PrivateRoute>
+              <CajaAbierta />
             </PrivateRoute>
           }
         />

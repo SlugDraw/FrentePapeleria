@@ -38,7 +38,6 @@ const mostrarListaImpresoraLocales = async () => {
     return;
   }
   const data = await response.json();
-  console.log(data);
   data[data.length] = { name: "seleccione una impresora" };
 
   return data;
