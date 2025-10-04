@@ -1,9 +1,9 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/Authcontext";
 import { Button } from "antd";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { getCajaById } from "../querys/salesQuerys";
+import { getCajaById, closeSales } from "../querys/salesQuerys";
 import { getTicketsByIdCaja } from "../querys/TicketsQuerys";
 import Loader from "../utils/Loader";
 import TicketTabla from "../components/tables/TicketsTabla";
@@ -14,11 +14,13 @@ const CajaAbierta = () => {
   const { idCaja } = useParams();
   const { isAuthenticated, logout, user } = useAuth();
   const [visible, setVisible] = useState(false);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isAuthenticated) {
       logout();
-      Navigate("/");
+      navigate("/");
     }
   }, [isAuthenticated]);
 
@@ -42,6 +44,38 @@ const CajaAbierta = () => {
     enabled: !!idCaja,
   });
 
+  const totalVenta = tickets?.reduce(
+    (acc, ticket) => acc + (ticket.total || 0),
+    0
+  );
+
+  const { mutate: closeSale, isLoading: close } = useMutation({
+    mutationKey: ["closeSale"],
+    mutationFn: closeSales,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["cajas", user.rol, user.id]);
+      Swal.fire({
+        title: "Caja cerrada",
+        text: "La caja ha sido cerrada exitosamente.",
+        icon: "success",
+        confirmButtonText: "Aceptar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/caja");
+        }
+      });
+    },
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
+        localStorage.removeItem("token");
+        navigate("/");
+      } else {
+        Swal.fire({ icon: "error", title: "Error", text: error.message });
+      }
+    },
+  });
+
   const cerrarCaja = async (idCaja) => {
     const result = await Swal.fire({
       title: "¿Cerrar caja?",
@@ -55,20 +89,11 @@ const CajaAbierta = () => {
     });
 
     if (result.isConfirmed) {
-      Swal.fire(
-        "Caja cerrada",
-        "La caja ha sido cerrada exitosamente.",
-        "success"
-      );
+      closeSale({ idCaja, totalVenta });
     }
   };
 
   if (isLoading) return <Loader />;
-
-  const totalVenta = tickets.reduce(
-    (acc, ticket) => acc + (ticket.total || 0),
-    0
-  );
 
   return (
     <>
@@ -86,7 +111,7 @@ const CajaAbierta = () => {
           <div>
             <span className="block text-sm text-gray-600">Venta total</span>
             <span className="text-lg font-semibold text-green-600">
-              {totalVenta.toFixed(2)}
+              {totalVenta?.toFixed(2)}
             </span>
           </div>
 

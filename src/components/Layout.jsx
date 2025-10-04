@@ -9,6 +9,7 @@ import Printers from "../pages/Printers";
 import Productos from "../pages/Productos";
 import Caja from "../pages/Caja";
 import CajaAbierta from "../pages/CajaAbierta";
+import Tickets from "../pages/Tickets";
 
 const Layout = () => {
   const { isAuthenticated } = useAuth();
@@ -22,7 +23,6 @@ const Layout = () => {
       <Routes>
         {/* Login público (no se mueve con sidebar) */}
         <Route path="/" element={<Login />} />
-
         {/* Rutas protegidas */}
         <Route
           path="/dashboard"
@@ -72,7 +72,15 @@ const Layout = () => {
             </PrivateRoute>
           }
         />
-
+        ´
+        <Route
+          path="/caja/tickets"
+          element={
+            <PrivateRoute>
+              <Tickets />
+            </PrivateRoute>
+          }
+        />
         {/* Redirigir rutas desconocidas */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

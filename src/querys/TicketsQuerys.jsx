@@ -41,4 +41,31 @@ const getTicketById = async (id) => {
   return res.json();
 };
 
-export { getTicketsByIdCaja, createTicket, getTicketById };
+const getTicketsByUserAndDates = async ({ id, fechaInicio, fechaFin }) => {
+  const token = localStorage.getItem("token");
+  const params = new URLSearchParams();
+  if (fechaInicio) params.append("fechaInicio", fechaInicio);
+  if (fechaFin) params.append("fechaFin", fechaFin);
+
+  const res = await fetch(
+    `${API_URL}/sales/ticket/user/${id}?${params.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "Error al traer los tickets");
+  }
+  return res.json();
+};
+
+export {
+  getTicketsByIdCaja,
+  createTicket,
+  getTicketById,
+  getTicketsByUserAndDates,
+};

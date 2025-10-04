@@ -8,7 +8,10 @@ const getCajas = async () => {
       Authorization: `Bearer ${token}`,
     },
   });
-  if (!res.ok) throw new Error("Error al obtener caja");
+  if (!res.ok) {
+    const errorMessage = await res.text();
+    throw new Error(errorMessage || "Error al obtener cajas");
+  }
   return res.json();
 };
 
@@ -20,7 +23,10 @@ const getCajaByUser = async (id) => {
       Authorization: `Bearer ${token}`,
     },
   });
-  if (!res.ok) throw new Error("Error al obtener caja");
+  if (!res.ok) {
+    const errorMessage = await res.text();
+    throw new Error(errorMessage || "Error al obtener cajas");
+  }
   return res.json();
 };
 
@@ -54,4 +60,21 @@ const getCajaById = async (id) => {
   return res.json();
 };
 
-export { getCajas, getCajaByUser, openSale, getCajaById };
+const closeSales = async ({ idCaja, totalVenta }) => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/sales/close/${idCaja}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ totalVenta: totalVenta }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "Error al abrir caja");
+  }
+  return res.json();
+};
+
+export { getCajas, getCajaByUser, openSale, getCajaById, closeSales };
