@@ -64,8 +64,10 @@ const editarImpresoras = async (p) => {
   });
   if (!res.ok) {
     const errorData = await res.json();
-    const error = new Error(errorData.message || "Error al actualizar usuario");
-    error.status = res.status;
+    const error = new Error(
+      errorData.message || "Error al actualizar la impresora"
+    );
+    error.response = { status: res.status };
     throw error;
   }
   return res.json();

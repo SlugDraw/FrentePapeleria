@@ -2,8 +2,17 @@ import DataTableProductos from "../components/tables/ProductosTabla";
 import { useQuery } from "@tanstack/react-query";
 import { listarProductos } from "../querys/productQuerys";
 import Loader from "../utils/Loader";
+import { useAuth } from "../context/Authcontext";
 
 const Productos = () => {
+  const { isAuthenticated, logout } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      logout();
+    }
+  }, [isAuthenticated]);
+
   const {
     data: productos,
     isLoading,
@@ -13,9 +22,14 @@ const Productos = () => {
     queryFn: listarProductos,
     onError: (error) => {
       if (error.response?.status === 401 || error.response?.status === 403) {
-        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
-        localStorage.removeItem("token");
-        navigate("/");
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
       }
     },
   });

@@ -8,7 +8,12 @@ const listarProductos = async () => {
       Authorization: `Bearer ${token}`,
     },
   });
-  if (!res.ok) throw new Error("Error al obtener productos");
+  if (!res.ok) {
+    const errorData = await res.json();
+    const error = new Error(errorData.message || "Error al obtener productos");
+    error.response = { status: res.status };
+    throw error;
+  }
   return res.json();
 };
 
@@ -24,7 +29,9 @@ const crearProducto = async ({ code, nombre, descripcion, precio, stock }) => {
   });
   if (!res.ok) {
     const errorData = await res.json();
-    throw new Error(errorData.message || "Error al crear producto");
+    const error = new Error(errorData.message || "Error al crear producto");
+    error.response = { status: res.status };
+    throw error;
   }
   return res.json();
 };
@@ -48,7 +55,11 @@ const actualizarProducto = async ({
   });
   if (!res.ok) {
     const errorData = await res.json();
-    throw new Error(errorData.message || "Error al actualizar producto");
+    const error = new Error(
+      errorData.message || "Error al actualizar producto"
+    );
+    error.response = { status: res.status };
+    throw error;
   }
   return res.json();
 };
@@ -63,7 +74,9 @@ const eliminarProducto = async (id) => {
   });
   if (!res.ok) {
     const errorData = await res.json();
-    throw new Error(errorData.message || "Error al eliminar producto");
+    const error = new Error(errorData.message || "Error al eliminar producto");
+    error.response = { status: res.status };
+    throw error;
   }
   return { id };
 };

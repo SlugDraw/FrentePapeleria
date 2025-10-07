@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { eliminarUsuario } from "../../querys/userQuerys";
 import { useState } from "react";
+import { useAuth } from "../../context/Authcontext";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -15,6 +16,7 @@ const UsuariosTabla = ({ data }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [idEdicion, setIdedicion] = useState(0);
+  const { logout } = useAuth();
 
   const queryClient = useQueryClient();
 
@@ -32,11 +34,16 @@ const UsuariosTabla = ({ data }) => {
     },
     onError: (error) => {
       if (error.response?.status === 401 || error.response?.status === 403) {
-        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
-        localStorage.removeItem("token");
-        navigate("/");
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
       } else {
-        Swal.fire("Error", error.message, "error");
+        Swal.fire({ icon: "error", title: "Error", text: error.message });
       }
     },
   });

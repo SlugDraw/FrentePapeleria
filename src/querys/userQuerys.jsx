@@ -23,8 +23,9 @@ const listarUsuarios = async () => {
   });
 
   if (!res.ok) {
-    const error = new Error("Error al obtener los usuarios");
-    error.status = res.status;
+    const errorData = await res.json();
+    const error = new Error(errorData.message || "Error al traer los usuarios");
+    error.response = { status: res.status };
     throw error;
   }
 
@@ -39,8 +40,10 @@ const eliminarUsuario = async (username) => {
   });
   if (!res.ok) {
     const errorData = await res.json();
-    const error = new Error(errorData.message || "Error al eliminar usuario");
-    error.status = res.status;
+    const error = new Error(
+      errorData.message || "Error al eliminar al usuario"
+    );
+    error.response = { status: res.status };
     throw error;
   }
   return true;
@@ -59,7 +62,7 @@ const crearUsuario = async (values) => {
   if (!res.ok) {
     const errorData = await res.json();
     const error = new Error(errorData.message || "Error al crear usuario");
-    error.status = res.status;
+    error.response = { status: res.status };
     throw error;
   }
   return res.json();
@@ -78,7 +81,7 @@ const actualizarUsuario = async ({ id, ...values }) => {
   if (!res.ok) {
     const errorData = await res.json();
     const error = new Error(errorData.message || "Error al actualizar usuario");
-    error.status = res.status;
+    error.response = { status: res.status };
     throw error;
   }
   return res.json();

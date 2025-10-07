@@ -20,7 +20,6 @@ const CajaAbierta = () => {
   useEffect(() => {
     if (!isAuthenticated) {
       logout();
-      navigate("/");
     }
   }, [isAuthenticated]);
 
@@ -31,6 +30,18 @@ const CajaAbierta = () => {
   } = useQuery({
     queryKey: ["caja", idCaja],
     queryFn: () => getCajaById(idCaja),
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
+      }
+    },
     enabled: !!idCaja,
   });
 
@@ -41,6 +52,18 @@ const CajaAbierta = () => {
   } = useQuery({
     queryKey: ["tickets", idCaja],
     queryFn: () => getTicketsByIdCaja(idCaja),
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
+      }
+    },
     enabled: !!idCaja,
   });
 
@@ -67,11 +90,14 @@ const CajaAbierta = () => {
     },
     onError: (error) => {
       if (error.response?.status === 401 || error.response?.status === 403) {
-        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
-        localStorage.removeItem("token");
-        navigate("/");
-      } else {
-        Swal.fire({ icon: "error", title: "Error", text: error.message });
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
       }
     },
   });

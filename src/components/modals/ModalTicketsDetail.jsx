@@ -1,10 +1,13 @@
 import { Modal, Typography, Button } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { getTicketById } from "../../querys/TicketsQuerys";
+import { useAuth } from "../../context/Authcontext";
 
 const { Title, Text } = Typography;
 
 const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
+  const { logout } = useAuth();
+
   const {
     data: detalleVenta,
     isLoading,
@@ -15,9 +18,14 @@ const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
     enabled: !!venta?.id && !!visible,
     onError: (error) => {
       if (error.response?.status === 401 || error.response?.status === 403) {
-        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
-        localStorage.removeItem("token");
-        navigate("/");
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
       }
     },
   });

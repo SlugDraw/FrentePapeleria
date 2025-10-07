@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { listarProductos } from "../../querys/productQuerys";
 import { createTicket } from "../../querys/TicketsQuerys";
 import Swal from "sweetalert2";
+import { useAuth } from "../../context/Authcontext";
 
 const Modaltickets = ({ visible, onCancel, idCaja }) => {
   const [form] = Form.useForm();
   const [productos, setProductos] = useState([]);
   const [total, setTotal] = useState(0);
+  const { logout } = useAuth();
 
   const queryClient = useQueryClient();
 
@@ -31,9 +33,14 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
     queryFn: listarProductos,
     onError: (error) => {
       if (error.response?.status === 401 || error.response?.status === 403) {
-        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
-        localStorage.removeItem("token");
-        navigate("/");
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
       }
     },
   });
@@ -121,11 +128,14 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
     },
     onError: (error) => {
       if (error.response?.status === 401 || error.response?.status === 403) {
-        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
-        localStorage.removeItem("token");
-        navigate("/");
-      } else {
-        Swal.fire({ icon: "error", title: "Error", text: error.message });
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
       }
     },
   });

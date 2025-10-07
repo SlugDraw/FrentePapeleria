@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import ticket from "../tickets/TicketPrueba";
 import Swal from "sweetalert2";
 import Loader from "../utils/Loader";
+import { useAuth } from "../context/Authcontext";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -23,6 +24,13 @@ const Printers = () => {
     "seleccione una impresora"
   );
   const [idImpresora, setIdImpresora] = useState("");
+  const { isAuthenticated, logout } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      logout();
+    }
+  }, [isAuthenticated]);
 
   const {
     data: dataPcLocal,
@@ -31,6 +39,18 @@ const Printers = () => {
   } = useQuery({
     queryKey: ["mostrar datos de PC"],
     queryFn: mostrarDatosPc,
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
+      }
+    },
   });
 
   const {
@@ -46,6 +66,18 @@ const Printers = () => {
         setStatePrintDirecto(data.isDirecto || false);
         setSelectImpresora({ name: data.nombre || "seleccione una impresora" });
         setIdImpresora(data.id || null);
+      }
+    },
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
       }
     },
   });
@@ -95,6 +127,18 @@ const Printers = () => {
   } = useQuery({
     queryKey: ["mostrar lista impresoras locales"],
     queryFn: mostrarListaImpresoraLocales,
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
+      }
+    },
     enabled: !!dataPcLocal,
   });
 
@@ -114,6 +158,18 @@ const Printers = () => {
         title: "Datos guardados",
       });
       queryClient.invalidateQueries(["mostrar impresora por caja"]);
+    },
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
+      }
     },
   });
 

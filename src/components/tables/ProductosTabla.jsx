@@ -5,6 +5,7 @@ import ModalProducto from "../modals/ModalProducto";
 import Swal from "sweetalert2";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { eliminarProducto } from "../../querys/productQuerys";
+import { useAuth } from "../../context/Authcontext";
 
 const { Search } = Input;
 
@@ -12,7 +13,7 @@ const ProductosTabla = ({ data }) => {
   const [nombreFilter, setNombreFilter] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-
+  const { logout } = useAuth();
   const queryClient = useQueryClient();
 
   // Mutación para eliminar
@@ -29,9 +30,14 @@ const ProductosTabla = ({ data }) => {
     },
     onError: (error) => {
       if (error.response?.status === 401 || error.response?.status === 403) {
-        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
-        localStorage.removeItem("token");
-        navigate("/");
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
       } else {
         Swal.fire({ icon: "error", title: "Error", text: error.message });
       }

@@ -4,13 +4,11 @@ import Swal from "sweetalert2";
 import { useAuth } from "../context/Authcontext";
 import { use, useEffect, useState } from "react";
 import { getCajas, getCajaByUser, openSale } from "../querys/salesQuerys";
-import { useNavigate } from "react-router-dom";
 import { Form, InputNumber, Button, Card, Typography, Space, Tag } from "antd";
 const { Title, Text } = Typography;
 
 const Caja = () => {
   const { isAuthenticated, logout, user } = useAuth();
-  const navigate = useNavigate();
   const [form] = Form.useForm();
   const [cajaActiva, setCajaActiva] = useState(0);
 
@@ -19,7 +17,6 @@ const Caja = () => {
   useEffect(() => {
     if (!isAuthenticated) {
       logout();
-      Navigate("/");
     }
   }, [isAuthenticated]);
 
@@ -30,6 +27,18 @@ const Caja = () => {
   } = useQuery({
     queryKey: ["cajas", user.rol, user.id],
     queryFn: () => (user.rol === "admin" ? getCajas() : getCajaByUser(user.id)),
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
+      }
+    },
     enabled: !!user.id,
   });
 
@@ -64,10 +73,14 @@ const Caja = () => {
     },
     onError: (error) => {
       if (error.response?.status === 401 || error.response?.status === 403) {
-        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
-        localStorage.removeItem("token");
-        logout();
-        navigate("/");
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
       } else {
         Swal.fire({ icon: "error", title: "Error", text: error.message });
       }
@@ -82,10 +95,9 @@ const Caja = () => {
           title: "Sesión expirada",
           text: "Inicia sesión de nuevo",
           icon: "error",
-          confirmButtonText: "Ir a login",
+          confirmButtonText: "Aceptar",
         }).then(() => {
           logout();
-          navigate("/");
         });
       }
     }

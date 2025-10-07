@@ -8,7 +8,12 @@ const getTicketsByIdCaja = async (id) => {
       Authorization: `Bearer ${token}`,
     },
   });
-  if (!res.ok) throw new Error("Error al obtener caja");
+  if (!res.ok) {
+    const errorData = await res.json();
+    const error = new Error(errorData.message || "Error al traer los tickets");
+    error.response = { status: res.status };
+    throw error;
+  }
   return res.json();
 };
 
@@ -24,7 +29,9 @@ const createTicket = async ({ serial, productos, caja, total }) => {
   });
   if (!res.ok) {
     const errorData = await res.json();
-    throw new Error(errorData.message || "Error al crear producto");
+    const error = new Error(errorData.message || "Error al crear el tickets");
+    error.response = { status: res.status };
+    throw error;
   }
   return res.json();
 };
@@ -37,7 +44,14 @@ const getTicketById = async (id) => {
       Authorization: `Bearer ${token}`,
     },
   });
-  if (!res.ok) throw new Error("Error al obtener detalles del ticket");
+  if (!res.ok) {
+    const errorData = await res.json();
+    const error = new Error(
+      errorData.message || "Error al consultar el ticket"
+    );
+    error.response = { status: res.status };
+    throw error;
+  }
   return res.json();
 };
 
@@ -58,7 +72,33 @@ const getTicketsByUserAndDates = async ({ id, fechaInicio, fechaFin }) => {
   );
   if (!res.ok) {
     const errorData = await res.json();
-    throw new Error(errorData.message || "Error al traer los tickets");
+    const error = new Error(errorData.message || "Error al traer los tickets");
+    error.response = { status: res.status };
+    throw error;
+  }
+  return res.json();
+};
+
+const getAllTicketsByDates = async ({ fechaInicio, fechaFin }) => {
+  const token = localStorage.getItem("token");
+  const params = new URLSearchParams();
+  if (fechaInicio) params.append("fechaInicio", fechaInicio);
+  if (fechaFin) params.append("fechaFin", fechaFin);
+
+  const res = await fetch(
+    `${API_URL}/sales/tickets/admin/all?${params.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!res.ok) {
+    const errorData = await res.json();
+    const error = new Error(errorData.message || "Error al traer los tickets");
+    error.response = { status: res.status };
+    throw error;
   }
   return res.json();
 };
@@ -68,4 +108,5 @@ export {
   createTicket,
   getTicketById,
   getTicketsByUserAndDates,
+  getAllTicketsByDates,
 };

@@ -2,12 +2,14 @@ import { useEffect } from "react";
 import { Modal, Form, Input, Select } from "antd";
 import Swal from "sweetalert2";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import Loader from "../../utils/Loader"; // loader pantalla completa
-import { crearUsuario, actualizarUsuario } from "../../querys/userQuerys"; // 👈 import actualizado
+import Loader from "../../utils/Loader";
+import { crearUsuario, actualizarUsuario } from "../../querys/userQuerys";
+import { useAuth } from "../../context/Authcontext";
 
 const ModalUsuario = ({ visible, onCancel, initialValues }) => {
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
+  const { logout } = useAuth();
 
   // --- Mutations ---
   const { mutate: crearUsuarioMutate, isLoading: creating } = useMutation({
@@ -25,9 +27,14 @@ const ModalUsuario = ({ visible, onCancel, initialValues }) => {
     },
     onError: (error) => {
       if (error.response?.status === 401 || error.response?.status === 403) {
-        Swal.fire("Sesión expirada", "Inicia sesión de nuevo", "error");
-        localStorage.removeItem("token");
-        navigate("/");
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
       } else {
         Swal.fire({ icon: "error", title: "Error", text: error.message });
       }

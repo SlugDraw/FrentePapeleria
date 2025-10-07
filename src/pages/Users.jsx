@@ -8,8 +8,15 @@ import Swal from "sweetalert2";
 import { useAuth } from "../context/Authcontext";
 
 const Users = () => {
-  const { logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      logout();
+    }
+  }, [isAuthenticated]);
+
   const {
     data: users,
     isLoading,
@@ -18,8 +25,16 @@ const Users = () => {
     queryKey: ["usuarios"],
     queryFn: listarUsuarios,
     onError: (error) => {
-      logout();
-      navigate("/");
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
+      }
     },
   });
 
@@ -31,10 +46,9 @@ const Users = () => {
           title: "Sesión expirada",
           text: "Inicia sesión de nuevo",
           icon: "error",
-          confirmButtonText: "Ir a login",
+          confirmButtonText: "Aceptar",
         }).then(() => {
           logout();
-          navigate("/");
         });
       }
     }

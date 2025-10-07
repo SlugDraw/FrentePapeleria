@@ -9,8 +9,10 @@ const getCajas = async () => {
     },
   });
   if (!res.ok) {
-    const errorMessage = await res.text();
-    throw new Error(errorMessage || "Error al obtener cajas");
+    const errorData = await res.json();
+    const error = new Error(errorData.message || "Error al obtener las cajas");
+    error.response = { status: res.status };
+    throw error;
   }
   return res.json();
 };
@@ -24,8 +26,10 @@ const getCajaByUser = async (id) => {
     },
   });
   if (!res.ok) {
-    const errorMessage = await res.text();
-    throw new Error(errorMessage || "Error al obtener cajas");
+    const errorData = await res.json();
+    const error = new Error(errorData.message || "Error al obtener las cajas");
+    error.response = { status: res.status };
+    throw error;
   }
   return res.json();
 };
@@ -43,7 +47,9 @@ const openSale = async ({ id, apertura }) => {
   });
   if (!res.ok) {
     const errorData = await res.json();
-    throw new Error(errorData.message || "Error al abrir caja");
+    const error = new Error(errorData.message || "Error al abrir al caja");
+    error.response = { status: res.status };
+    throw error;
   }
   return res.json();
 };
@@ -56,7 +62,12 @@ const getCajaById = async (id) => {
       Authorization: `Bearer ${token}`,
     },
   });
-  if (!res.ok) throw new Error("Error al obtener caja por ID");
+  if (!res.ok) {
+    const errorData = await res.json();
+    const error = new Error(errorData.message || "Error al obtener la caja");
+    error.response = { status: res.status };
+    throw error;
+  }
   return res.json();
 };
 
@@ -72,7 +83,9 @@ const closeSales = async ({ idCaja, totalVenta }) => {
   });
   if (!res.ok) {
     const errorData = await res.json();
-    throw new Error(errorData.message || "Error al abrir caja");
+    const error = new Error(errorData.message || "Error al cerrar la caja");
+    error.response = { status: res.status };
+    throw error;
   }
   return res.json();
 };
