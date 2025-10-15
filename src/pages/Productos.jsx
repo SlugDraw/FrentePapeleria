@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { listarProductos } from "../querys/productQuerys";
 import Loader from "../utils/Loader";
 import { useAuth } from "../context/Authcontext";
+import { useEffect } from "react";
+import Swal from "sweetalert2";
 
 const Productos = () => {
   const { isAuthenticated, logout } = useAuth();

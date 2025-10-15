@@ -6,11 +6,13 @@ import { use, useEffect, useState } from "react";
 import { getCajas, getCajaByUser, openSale } from "../querys/salesQuerys";
 import { Form, InputNumber, Button, Card, Typography, Space, Tag } from "antd";
 const { Title, Text } = Typography;
+import { useNavigate } from "react-router-dom";
 
 const Caja = () => {
   const { isAuthenticated, logout, user } = useAuth();
   const [form] = Form.useForm();
   const [cajaActiva, setCajaActiva] = useState(0);
+  const navigate = useNavigate();
 
   const queryClient = useQueryClient();
 

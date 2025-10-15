@@ -1,4 +1,5 @@
 import { useAuth } from "../context/Authcontext";
+import { useEffect } from "react";
 
 const Dashboard = () => {
   const { logout, isAuthenticated } = useAuth();
@@ -8,6 +9,7 @@ const Dashboard = () => {
       logout();
     }
   }, [isAuthenticated]);
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold">Dashboard</h1>
