@@ -2,11 +2,14 @@ import { Modal, Typography, Button } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { getTicketById } from "../../querys/TicketsQuerys";
 import { useAuth } from "../../context/Authcontext";
+import Swal from "sweetalert2";
+import { useEffect } from "react";
+import TicketVenta from "../../tickets/TicketVenta";
 
 const { Title, Text } = Typography;
 
 const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
-  const { logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
 
   const {
     data: detalleVenta,
@@ -30,6 +33,27 @@ const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
     },
   });
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      logout();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (error) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Inicia sesión de nuevo",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          logout();
+        });
+      }
+    }
+  }, [error]);
+
   return (
     <Modal
       title={<Title level={4}>Detalle de Venta</Title>}
@@ -37,7 +61,13 @@ const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
       onCancel={onCancel}
       footer={[
         <div className="justify-end">
-          <Button className="m-2" type="primary">
+          <Button
+            className="m-2"
+            type="primary"
+            onClick={() =>
+              TicketVenta(user.nombre, venta, detalleVenta?.productos)
+            }
+          >
             Reimprimir Ticket
           </Button>
           <Button className="m-2" key="close" danger onClick={onCancel}>

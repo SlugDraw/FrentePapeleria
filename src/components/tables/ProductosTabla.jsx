@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { eliminarProducto } from "../../querys/productQuerys";
 import { useAuth } from "../../context/Authcontext";
+import TicketCode from "../../tickets/TicketCode";
 
 const { Search } = Input;
 
@@ -84,7 +85,7 @@ const ProductosTabla = ({ data }) => {
               {
                 key: "2",
                 label: "Imprimir código",
-                onClick: () => console.log(record.code),
+                onClick: () => TicketCode(record.code),
               },
               {
                 key: "3",

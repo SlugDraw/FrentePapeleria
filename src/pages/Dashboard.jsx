@@ -190,7 +190,10 @@ const Dashboard = () => {
               </h2>
               <RangePicker
                 value={rangoFechas}
-                onChange={(values) => setRangoFechas(values)}
+                onChange={(values) => {
+                  setRangoFechas(values);
+                  refetch();
+                }}
                 format="YYYY-MM-DD"
                 allowClear={false}
                 disabledDate={disabledDate}

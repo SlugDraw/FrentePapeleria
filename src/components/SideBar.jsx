@@ -113,13 +113,13 @@ export default function Sidebar() {
               {!isCollapsed && <span>Usuarios</span>}
             </Link>
 
-            <Link
+            {/*  <Link
               to="/impresoras"
               className="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 rounded-md"
             >
               <Printer size={20} />
               {!isCollapsed && <span>Impresoras</span>}
-            </Link>
+            </Link> */}
 
             <Link
               to="/productos"

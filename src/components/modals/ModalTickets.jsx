@@ -5,12 +5,13 @@ import { listarProductos } from "../../querys/productQuerys";
 import { createTicket } from "../../querys/TicketsQuerys";
 import Swal from "sweetalert2";
 import { useAuth } from "../../context/Authcontext";
+import TicketVenta from "../../tickets/TicketVenta";
 
 const Modaltickets = ({ visible, onCancel, idCaja }) => {
   const [form] = Form.useForm();
   const [productos, setProductos] = useState([]);
   const [total, setTotal] = useState(0);
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const queryClient = useQueryClient();
 
@@ -93,7 +94,6 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
       }).then(async (result) => {
         if (result.isConfirmed) {
           await crearTicketMutate(data);
-          setProductos([]);
           setTotal(0);
           form.resetFields();
         }
@@ -110,7 +110,7 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
   const { mutate: crearTicketMutate, isLoading: creatingticket } = useMutation({
     mutationKey: ["crearTicket"],
     mutationFn: createTicket,
-    onSuccess: () => {
+    onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries(["tickets", idCaja]);
       Swal.fire({
         title: "Venta registrada",
@@ -122,6 +122,7 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
       }).then((result) => {
         if (result.isConfirmed) {
           console.log("se imprime el ticket");
+          TicketVenta(user.nombre, data, productos);
         }
         onCancel(); // Cierra el modal después de la acción
       });

@@ -5,6 +5,9 @@ import { Form, Input, Button } from "antd";
 import Swal from "sweetalert2";
 import { useMutation } from "@tanstack/react-query";
 import { loginEmail } from "../querys/userQuerys";
+import logo from "../assets/papeleriaLogo.png";
+import logo2 from "../assets/papeleria.png";
+import Loader from "../utils/Loader";
 
 export default function Login() {
   const [form] = Form.useForm();
@@ -55,6 +58,7 @@ export default function Login() {
     <div className="h-screen flex items-center justify-center bg-gray-100">
       {isLoading && <Loader />}
       <div className="bg-white shadow-lg rounded-xl p-8 w-80">
+        <img src={logo} alt="logo" />
         <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
 
         <Form form={form} layout="vertical" onFinish={handleLogin}>

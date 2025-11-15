@@ -17,7 +17,7 @@ const createPdf = async (props, output = "print") => {
         content,
       } = props;
       const docDefinition = {
-        pageSize, //TAMAÑO HOJA
+        pageSize: "auto", //TAMAÑO HOJA
         pageMargins, //MARGENES HOJA
         info, //METADATA PDF
         styles, //ESTILOS PDF
