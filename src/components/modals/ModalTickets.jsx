@@ -137,6 +137,13 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
         }).then(() => {
           logout();
         });
+      } else {
+        Swal.fire({
+          title: "Error en la venta",
+          text: error.message,
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        });
       }
     },
   });
