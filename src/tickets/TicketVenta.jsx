@@ -78,6 +78,18 @@ const TicketVenta = (empleado, data, productos) => {
         fontSize: 8,
         margin: [0, 5, 0, 0],
       },
+      {
+        text: "Este ticket no es factura, conserve su ticket",
+        alignment: "center",
+        fontSize: 6,
+        margin: [0, 5, 0, 0],
+      },
+      {
+        text: "No apto para uso fiscal",
+        alignment: "center",
+        fontSize: 6,
+        margin: [0, 5, 0, 0],
+      },
     ],
     styles: {
       header: { fontSize: 14, bold: true },
