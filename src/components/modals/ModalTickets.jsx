@@ -162,6 +162,8 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
       onOk={handleSave}
       okText="Guardar Venta"
       cancelText="Cancelar"
+      maskClosable={false}
+      keyboard={false}
     >
       <div className="mt-4 flex justify-between items-center border-t pt-3">
         <Text strong>Total:</Text>
@@ -183,6 +185,9 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
                 nombre.includes(input.toLowerCase()) ||
                 code.includes(input.toLowerCase())
               );
+            }}
+            onChange={() => {
+              form.setFieldsValue({ cantidad: 1 });
             }}
           >
             {products.map((p) => (
