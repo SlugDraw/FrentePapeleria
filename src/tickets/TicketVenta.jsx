@@ -85,7 +85,7 @@ const TicketVenta = (empleado, data, productos) => {
         margin: [0, 5, 0, 0],
       },
       {
-        text: "No apto para uso fiscal",
+        text: "Este ticket no es un comprobante fiscal",
         alignment: "center",
         fontSize: 6,
         margin: [0, 5, 0, 0],
