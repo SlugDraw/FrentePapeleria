@@ -6,9 +6,6 @@ pdfMake.vfs = pdfFonts.vfs;
 pdfMake.documentBaseUrl = "";
 
 const TicketVenta = (empleado, data, productos) => {
-  console.time("TicketVenta print");
-  console.log(productos);
-
   const { serial, total } = data;
 
   const docDefinition = {
@@ -39,7 +36,7 @@ const TicketVenta = (empleado, data, productos) => {
 
             // FILAS DE PRODUCTOS
             ...productos.map((p) => [
-              `${p?.nombre || p?.producto.nombre} (${p.cantidad})`,
+              `(${p.cantidad}) ${p?.nombre || p?.producto.nombre}`,
               {
                 text: `$${(
                   Number(p?.precio || p?.producto.precio) * Number(p.cantidad)
@@ -60,11 +57,6 @@ const TicketVenta = (empleado, data, productos) => {
         text: `TOTAL: $${Number(total).toFixed(2)}`,
         style: "total",
         alignment: "right",
-      },
-      {
-        text: "¡Gracias por su compra!",
-        alignment: "center",
-        margin: [0, 10, 0, 0],
       },
       {
         text: "Calzada de las Águilas #783",
@@ -89,6 +81,11 @@ const TicketVenta = (empleado, data, productos) => {
         alignment: "center",
         fontSize: 6,
         margin: [0, 5, 0, 0],
+      },
+      {
+        text: "¡Gracias por su compra!",
+        alignment: "center",
+        margin: [0, 10, 0, 0],
       },
     ],
     styles: {

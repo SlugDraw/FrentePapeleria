@@ -1,4 +1,13 @@
-import { Modal, Form, Input, Button, Select, Space, Typography } from "antd";
+import {
+  Modal,
+  Form,
+  Input,
+  Button,
+  Select,
+  Space,
+  Typography,
+  InputNumber,
+} from "antd";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { listarProductos } from "../../querys/productQuerys";
@@ -50,12 +59,13 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
     const values = form.getFieldsValue();
     if (values.producto && values.cantidad) {
       const item = products.filter(
-        (p) => p.code.toString() === values.producto.toString()
+        (p) => p.code.toString() === values.producto.toString(),
       );
 
       const subtotal = item[0].precio * values.cantidad;
 
       setTotal(parseFloat(total) + subtotal);
+      console.log("Total actualizado:", total);
 
       setProductos([
         ...productos,
@@ -94,8 +104,6 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
       }).then(async (result) => {
         if (result.isConfirmed) {
           await crearTicketMutate(data);
-          setTotal(0);
-          form.resetFields();
         }
       });
     } else {
@@ -112,6 +120,8 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
     mutationFn: createTicket,
     onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries(["tickets", idCaja]);
+      setTotal(0);
+      form.resetFields();
       Swal.fire({
         title: "Venta registrada",
         text: "¿Desea imprimir su ticket?",
@@ -121,7 +131,6 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
         cancelButtonText: "No imprimir",
       }).then((result) => {
         if (result.isConfirmed) {
-          console.log("se imprime el ticket");
           TicketVenta(user.nombre, data, productos);
         }
         onCancel(); // Cierra el modal después de la acción
@@ -199,8 +208,12 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
         </Form.Item>
 
         {/* Cantidad */}
-        <Form.Item name="cantidad" label="Cantidad">
-          <Input type="number" min={1} placeholder="1" />
+        <Form.Item
+          name="cantidad"
+          label="Cantidad"
+          rules={[{ required: true, message: "La cantidad es obligatoria" }]}
+        >
+          <InputNumber min={1} precision={0} style={{ width: "100%" }} />
         </Form.Item>
 
         <Form.Item>
@@ -229,7 +242,9 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
               type="link"
               danger
               onClick={() => {
+                console.log("Total Anterior", total);
                 setTotal(total - p.subtotal);
+                console.log("Total Actual", total);
                 setProductos(productos.filter((_, index) => index !== i));
               }}
             >
