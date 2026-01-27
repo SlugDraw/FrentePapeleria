@@ -64,9 +64,10 @@ const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
           <Button
             className="m-2"
             type="primary"
-            onClick={() =>
-              TicketVenta(user.nombre, venta, detalleVenta?.productos)
-            }
+            onClick={() => {
+              console.log(venta);
+              TicketVenta(user.nombre, venta, detalleVenta?.productos);
+            }}
           >
             Reimprimir Ticket
           </Button>
@@ -85,6 +86,7 @@ const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
             ? new Date(venta.fecha).toLocaleString("es-MX", {
                 day: "2-digit",
                 month: "2-digit",
+                year: "numeric",
                 hour: "2-digit",
                 minute: "2-digit",
                 hour12: false,
@@ -101,12 +103,24 @@ const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
           >
             <span>
               {p.producto.code} - {p.producto.nombre} : {p.cantidad} X{" "}
-              {p.producto.precio} ={" "}
-              {p?.producto?.precio
-                ? (
-                    parseFloat(p.producto.precio) * parseFloat(p.cantidad)
-                  ).toFixed(2)
-                : 0}
+              {p.producto.precio.toFixed(2)} ={" "}
+              {(p?.producto?.precio
+                ? Number(p.producto.precio) * Number(p.cantidad) -
+                  (Number(p?.descuento) > 0
+                    ? (Number(p.producto.precio) *
+                        Number(p.cantidad) *
+                        Number(p.descuento)) /
+                      100
+                    : 0)
+                : 0
+              ).toFixed(2)}
+              {p?.descuento > 0 ? (
+                <strong style={{ color: "red", marginLeft: 8 }}>
+                  (Descuento: {p.descuento}%){" "}
+                </strong>
+              ) : (
+                ""
+              )}
             </span>
           </div>
         ))}

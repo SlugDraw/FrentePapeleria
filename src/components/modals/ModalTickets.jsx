@@ -61,12 +61,13 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
       const item = products.filter(
         (p) => p.code.toString() === values.producto.toString(),
       );
+      let subtotal = item[0].precio * values.cantidad;
 
-      const subtotal = item[0].precio * values.cantidad;
+      if (values.descuento > 0) {
+        subtotal = subtotal - (subtotal * values.descuento) / 100;
+      }
 
       setTotal(parseFloat(total) + subtotal);
-      console.log("Total actualizado:", total);
-
       setProductos([
         ...productos,
         {
@@ -74,18 +75,19 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
           codigo: values.producto,
           nombre: item[0].nombre,
           cantidad: values.cantidad,
+          descuento: values.descuento || 0,
           precio: item[0].precio,
           subtotal,
         },
       ]);
 
-      form.resetFields(["producto", "cantidad"]);
+      form.resetFields(["producto", "cantidad", "descuento"]);
     }
   };
 
   const handleSave = async () => {
     const prods = productos.map((p) => {
-      return { producto: p.id, cantidad: p.cantidad };
+      return { producto: p.id, cantidad: p.cantidad, descuento: p.descuento };
     });
     if (prods.length !== 0) {
       const data = {
@@ -173,6 +175,7 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
       cancelText="Cancelar"
       maskClosable={false}
       keyboard={false}
+      width="60%"
     >
       <div className="mt-4 flex justify-between items-center border-t pt-3">
         <Text strong>Total:</Text>
@@ -197,6 +200,7 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
             }}
             onChange={() => {
               form.setFieldsValue({ cantidad: 1 });
+              form.setFieldsValue({ descuento: 0 });
             }}
           >
             {products.map((p) => (
@@ -214,6 +218,16 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
           rules={[{ required: true, message: "La cantidad es obligatoria" }]}
         >
           <InputNumber min={1} precision={0} style={{ width: "100%" }} />
+        </Form.Item>
+
+        {/* Descuentos */}
+        <Form.Item name="descuento" label="Descuento (%)">
+          <InputNumber
+            min={0}
+            max={100}
+            precision={0}
+            style={{ width: "100%" }}
+          />
         </Form.Item>
 
         <Form.Item>
@@ -236,15 +250,19 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
             className="flex justify-between items-center bg-gray-100 p-2 rounded-lg"
           >
             <span>
-              {p.codigo} - {p.nombre}: {p.cantidad} X {p.precio} = {p.subtotal}
+              {p.codigo} - {p.nombre} : {p.cantidad} X {p.precio.toFixed(2)} = $
+              {p.subtotal.toFixed(2)}
+              {p.descuento > 0 && (
+                <strong style={{ color: "red", marginLeft: 8 }}>
+                  ( {p.descuento}% Descuento )
+                </strong>
+              )}
             </span>
             <Button
               type="link"
               danger
               onClick={() => {
-                console.log("Total Anterior", total);
                 setTotal(total - p.subtotal);
-                console.log("Total Actual", total);
                 setProductos(productos.filter((_, index) => index !== i));
               }}
             >

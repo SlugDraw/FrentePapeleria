@@ -6,7 +6,7 @@ pdfMake.vfs = pdfFonts.vfs;
 pdfMake.documentBaseUrl = "";
 
 const TicketVenta = (empleado, data, productos) => {
-  const { serial, total } = data;
+  const { serial, total, fecha } = data;
 
   const docDefinition = {
     pageSize: { width: 226.77, height: "auto" },
@@ -19,6 +19,7 @@ const TicketVenta = (empleado, data, productos) => {
         margin: [0, 0, 0, 5],
       },
       { text: `Folio: ${serial}`, margin: [0, 10, 0, 0] },
+      { text: `${fecha}` },
       { text: `Empleado: ${empleado}` },
       {
         canvas: [{ type: "line", x1: 0, y1: 0, x2: 206, y2: 0, lineWidth: 1 }],
@@ -35,15 +36,38 @@ const TicketVenta = (empleado, data, productos) => {
             ],
 
             // FILAS DE PRODUCTOS
-            ...productos.map((p) => [
-              `(${p.cantidad}) ${p?.nombre || p?.producto.nombre}`,
-              {
-                text: `$${(
-                  Number(p?.precio || p?.producto.precio) * Number(p.cantidad)
-                ).toFixed(2)}`,
-                alignment: "right",
-              },
-            ]),
+            ...productos.map((p) => {
+              const precio = Number(p?.precio || p?.producto?.precio || 0);
+              const cantidad = Number(p?.cantidad || 0);
+              const descuento = Number(
+                p?.descuento || p?.producto?.descuento || 0,
+              );
+
+              const subtotal = precio * cantidad;
+              const totalConDescuento =
+                descuento > 0 ? subtotal * (1 - descuento / 100) : subtotal;
+
+              return [
+                `(${cantidad}) ${p?.nombre || p?.producto?.nombre}`,
+                {
+                  text:
+                    descuento > 0
+                      ? [
+                          {
+                            text: `$${subtotal.toFixed(2)} `,
+                            decoration: "lineThrough",
+                            color: "#999",
+                          },
+                          {
+                            text: `$${totalConDescuento.toFixed(2)}`,
+                            bold: true,
+                          },
+                        ]
+                      : `$${subtotal.toFixed(2)}`,
+                  alignment: "right",
+                },
+              ];
+            }),
           ],
         },
         layout: "noBorders",
@@ -77,7 +101,19 @@ const TicketVenta = (empleado, data, productos) => {
         margin: [0, 5, 0, 0],
       },
       {
-        text: "Este ticket no es un comprobante fiscal",
+        text: "Este ticket no es comprobante fiscal",
+        alignment: "center",
+        fontSize: 6,
+        margin: [0, 5, 0, 0],
+      },
+      {
+        text: "Si requiere factura solicitarla unicamente en el mes que realizo su compra",
+        alignment: "center",
+        fontSize: 6,
+        margin: [0, 5, 0, 0],
+      },
+      {
+        text: "Conserve su ticket para cualquier aclaración",
         alignment: "center",
         fontSize: 6,
         margin: [0, 5, 0, 0],
@@ -95,26 +131,6 @@ const TicketVenta = (empleado, data, productos) => {
   };
 
   pdfMake.createPdf(docDefinition).print();
-  /* pdfMake.createPdf(docDefinition).getBlob((blob) => {
-    const url = URL.createObjectURL(blob);
-
-    const win = window.open(url);
-
-    if (!win) {
-      alert("Debes permitir ventanas emergentes para imprimir el ticket.");
-      return;
-    }
-
-    win.addEventListener("load", () => {
-      win.print();
-
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-        win.close();
-      }, 1000);
-    });
-  });
- */
   console.timeEnd("TicketVenta print");
 };
 
