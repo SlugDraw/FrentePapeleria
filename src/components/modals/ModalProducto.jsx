@@ -94,7 +94,7 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
           });
         }
       },
-    }
+    },
   );
 
   useEffect(() => {
@@ -106,7 +106,7 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
           precio: "",
           stock: "",
           code: "",
-        }
+        },
       );
 
       if (initialValues && initialValues.code) {
@@ -145,13 +145,30 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
 
   const renderBarcode = (codigo) => {
     if (barcodeRef.current && codigo) {
-      JsBarcode(barcodeRef.current, codigo, {
-        format: "EAN13",
-        lineColor: "#000",
-        width: 2,
-        height: 80,
-        displayValue: true,
-      });
+      try {
+        JsBarcode(barcodeRef.current, codigo, {
+          format: "EAN13",
+          lineColor: "#000",
+          width: 2,
+          height: 80,
+          displayValue: true,
+        });
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Error al generar el código de barras",
+          text: "El código ingresado no es válido para EAN-13, se autogenero uno nuevo, favor de revisar.",
+        });
+        const code = generarEAN13();
+        form.setFieldsValue({ code: code });
+        JsBarcode(barcodeRef.current, code, {
+          format: "EAN13",
+          lineColor: "#000",
+          width: 2,
+          height: 80,
+          displayValue: true,
+        });
+      }
     } else if (barcodeRef.current) {
       barcodeRef.current.innerHTML = "";
     }
