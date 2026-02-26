@@ -6,7 +6,7 @@ pdfMake.vfs = pdfFonts.vfs;
 pdfMake.documentBaseUrl = "";
 
 const TicketVenta = (empleado, data, productos) => {
-  const { serial, total, fecha } = data;
+  const { serial, total, fecha, formaDePago } = data;
 
   const docDefinition = {
     pageSize: { width: 226.77, height: "auto" },
@@ -21,6 +21,7 @@ const TicketVenta = (empleado, data, productos) => {
       { text: `Folio: ${serial}`, margin: [0, 10, 0, 0] },
       { text: `${fecha}` },
       { text: `Empleado: ${empleado}` },
+      { text: `Forma de pago: ${formaDePago}` },
       {
         canvas: [{ type: "line", x1: 0, y1: 0, x2: 206, y2: 0, lineWidth: 1 }],
         margin: [0, 5, 0, 5],
@@ -48,7 +49,7 @@ const TicketVenta = (empleado, data, productos) => {
                 descuento > 0 ? subtotal * (1 - descuento / 100) : subtotal;
 
               return [
-                `(${cantidad}) ${p?.nombre || p?.producto?.nombre}`,
+                `(${cantidad} X $${precio.toFixed(2)}) ${p?.nombre || p?.producto?.nombre}`,
                 {
                   text:
                     descuento > 0
@@ -85,13 +86,13 @@ const TicketVenta = (empleado, data, productos) => {
       {
         text: "Calzada de las Águilas #783",
         alignment: "center",
-        fontSize: 8,
+        fontSize: 6,
         margin: [0, 5, 0, 0],
       },
       {
         text: "Col. Ampliación las Águilas",
         alignment: "center",
-        fontSize: 8,
+        fontSize: 6,
         margin: [0, 5, 0, 0],
       },
       {
@@ -121,7 +122,7 @@ const TicketVenta = (empleado, data, productos) => {
       {
         text: "¡Gracias por su compra!",
         alignment: "center",
-        margin: [0, 10, 0, 0],
+        margin: [0, 8, 0, 0],
       },
     ],
     styles: {

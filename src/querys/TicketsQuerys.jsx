@@ -17,7 +17,13 @@ const getTicketsByIdCaja = async (id) => {
   return res.json();
 };
 
-const createTicket = async ({ serial, productos, caja, total }) => {
+const createTicket = async ({
+  serial,
+  productos,
+  caja,
+  total,
+  formaDePago,
+}) => {
   const token = localStorage.getItem("token");
   const res = await fetch(`${API_URL}/sales/ticket`, {
     method: "POST",
@@ -25,7 +31,7 @@ const createTicket = async ({ serial, productos, caja, total }) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ serial, productos, caja, total }),
+    body: JSON.stringify({ serial, productos, caja, total, formaDePago }),
   });
   if (!res.ok) {
     const errorData = await res.json();
@@ -47,7 +53,7 @@ const getTicketById = async (id) => {
   if (!res.ok) {
     const errorData = await res.json();
     const error = new Error(
-      errorData.message || "Error al consultar el ticket"
+      errorData.message || "Error al consultar el ticket",
     );
     error.response = { status: res.status };
     throw error;
@@ -68,7 +74,7 @@ const getTicketsByUserAndDates = async ({ id, fechaInicio, fechaFin }) => {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
   if (!res.ok) {
     const errorData = await res.json();
@@ -92,7 +98,7 @@ const getAllTicketsByDates = async ({ fechaInicio, fechaFin }) => {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
   if (!res.ok) {
     const errorData = await res.json();

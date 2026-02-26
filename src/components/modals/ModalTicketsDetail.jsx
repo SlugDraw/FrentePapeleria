@@ -54,6 +54,8 @@ const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
     }
   }, [error]);
 
+  console.log("Detalle de Venta:", detalleVenta);
+
   return (
     <Modal
       title={<Title level={4}>Detalle de Venta</Title>}
@@ -93,6 +95,8 @@ const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
               })
             : ""}
         </Text>
+        <br />
+        <Text strong>Forma de Pago:</Text> <Text>{venta?.formaDePago}</Text>
         <br />
       </div>
       <div className="space-y-2 max-h-60 overflow-y-auto border-t pt-3">

@@ -86,6 +86,16 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
   };
 
   const handleSave = async () => {
+    const formaDePago = form.getFieldValue("formaDePago");
+
+    if (!formaDePago) {
+      Swal.fire({
+        icon: "warning",
+        title: "Forma de pago requerida",
+        text: "Por favor selecciona una forma de pago antes de continuar.",
+      });
+      return;
+    }
     const prods = productos.map((p) => {
       return { producto: p.id, cantidad: p.cantidad, descuento: p.descuento };
     });
@@ -95,6 +105,7 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
         productos: prods,
         caja: idCaja,
         total: total,
+        formaDePago: formaDePago,
       };
       Swal.fire({
         title: "¿Desea continuar con la compra?",
@@ -183,7 +194,7 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
           ${total.toFixed(2)}
         </Text>
       </div>
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" requiredMark>
         {/* Selector de producto con búsqueda */}
         <Form.Item name="producto" label="Producto">
           <Select
@@ -240,37 +251,58 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
             Agregar Producto
           </Button>
         </Form.Item>
-      </Form>
 
-      {/* Lista de productos agregados */}
-      <div className="mt-4 space-y-2 max-h-40 overflow-y-auto">
-        {productos.map((p, i) => (
-          <div
-            key={i}
-            className="flex justify-between items-center bg-gray-100 p-2 rounded-lg"
-          >
-            <span>
-              {p.codigo} - {p.nombre} : {p.cantidad} X {p.precio.toFixed(2)} = $
-              {p.subtotal.toFixed(2)}
-              {p.descuento > 0 && (
-                <strong style={{ color: "red", marginLeft: 8 }}>
-                  ( {p.descuento}% Descuento )
-                </strong>
-              )}
-            </span>
-            <Button
-              type="link"
-              danger
-              onClick={() => {
-                setTotal(total - p.subtotal);
-                setProductos(productos.filter((_, index) => index !== i));
-              }}
+        {/* Lista de productos agregados */}
+        <div className="mt-4 space-y-2 max-h-40 overflow-y-auto">
+          {productos.map((p, i) => (
+            <div
+              key={i}
+              className="flex justify-between items-center bg-gray-100 p-2 rounded-lg"
             >
-              Eliminar
-            </Button>
-          </div>
-        ))}
-      </div>
+              <span>
+                {p.codigo} - {p.nombre} : {p.cantidad} X {p.precio.toFixed(2)} =
+                ${p.subtotal.toFixed(2)}
+                {p.descuento > 0 && (
+                  <strong style={{ color: "red", marginLeft: 8 }}>
+                    ( {p.descuento}% Descuento )
+                  </strong>
+                )}
+              </span>
+              <Button
+                type="link"
+                danger
+                onClick={() => {
+                  setTotal(total - p.subtotal);
+                  setProductos(productos.filter((_, index) => index !== i));
+                }}
+              >
+                Eliminar
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        {/* Se agrega  select de forma de pago*/}
+        <div className="mt-4 space-y-2 max-h-40 overflow-y-auto">
+          <Form.Item
+            name="formaDePago"
+            label="Forma de Pago"
+            rules={[
+              {
+                required: true,
+                message: "Selecciona una forma de pago",
+              },
+            ]}
+          >
+            <Select placeholder="Selecciona una forma de pago">
+              <Select.Option value="Efectivo">Efectivo</Select.Option>
+              <Select.Option value="TDC">Tarjeta de Crédito</Select.Option>
+              <Select.Option value="TDD">Tarjeta de Débito</Select.Option>
+              <Select.Option value="Transferencia">Transferencia</Select.Option>
+            </Select>
+          </Form.Item>
+        </div>
+      </Form>
     </Modal>
   );
 };
