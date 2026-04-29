@@ -47,8 +47,7 @@ const TicketCode = async (codigo) => {
       win.print();
       setTimeout(() => {
         URL.revokeObjectURL(url);
-        win.close();
-      }, 1000);
+      }, 10000);
     });
   });
 };
