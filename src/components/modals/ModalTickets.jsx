@@ -201,6 +201,22 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
             showSearch
             placeholder="Buscar producto"
             optionFilterProp="children"
+            onSearch={(value) => {
+              const match = products.find(
+                (p) => p.code.toLowerCase() === value.toLowerCase(),
+              );
+
+              if (match) {
+                form.setFieldsValue({
+                  producto: match.code,
+                  cantidad: 1,
+                  descuento: 0,
+                });
+              }
+            }}
+            onChange={() => {
+              form.setFieldsValue({ cantidad: 1, descuento: 0 });
+            }}
             filterOption={(input, option) => {
               const nombre = option?.children?.toLowerCase() || "";
               const code = option?.value?.toLowerCase() || "";
@@ -208,10 +224,6 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
                 nombre.includes(input.toLowerCase()) ||
                 code.includes(input.toLowerCase())
               );
-            }}
-            onChange={() => {
-              form.setFieldsValue({ cantidad: 1 });
-              form.setFieldsValue({ descuento: 0 });
             }}
           >
             {products.map((p) => (
