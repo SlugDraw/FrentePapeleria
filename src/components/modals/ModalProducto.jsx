@@ -146,8 +146,10 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
   const renderBarcode = (codigo) => {
     if (barcodeRef.current && codigo) {
       try {
-        JsBarcode(barcodeRef.current, codigo, {
-          format: "EAN13",
+        const limpio = codigo.trim();
+
+        JsBarcode(barcodeRef.current, limpio, {
+          format: "CODE128",
           lineColor: "#000",
           width: 2,
           height: 80,
