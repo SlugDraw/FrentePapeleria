@@ -59,12 +59,16 @@ const ProductosTabla = ({ data }) => {
   };
 
   const filteredData = data.filter((u) =>
-    u.nombre.toLowerCase().includes(nombreFilter.toLowerCase())
+    u.nombre.toUpperCase().includes(nombreFilter.toUpperCase()),
   );
 
   const columns = [
-    { title: "Nombre", dataIndex: "nombre", key: "nombre" },
-    { title: "Descripción", dataIndex: "descripcion", key: "descripcion" },
+    {
+      title: "Descripción",
+      dataIndex: "descripcion",
+      key: "descripcion",
+      render: (text) => (text ? text.toUpperCase() : ""),
+    },
     { title: "Precio", dataIndex: "precio", key: "precio" },
     { title: "Stock", dataIndex: "stock", key: "stock" },
     {

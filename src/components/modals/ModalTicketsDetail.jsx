@@ -106,8 +106,9 @@ const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
             className="flex justify-between items-center bg-gray-100 p-2 rounded-lg"
           >
             <span>
-              {p.producto.code} - {p.producto.nombre} : {p.cantidad} X{" "}
-              {p.producto.precio.toFixed(2)} ={" "}
+              {p.producto?.code || "Producto Eliminado"} -{" "}
+              {p.producto?.nombre || "Producto Eliminado"} : {p.cantidad} X{" "}
+              {p.producto?.precio.toFixed(2) || parseInt(0).toFixed(2)} ={" "}
               {(p?.producto?.precio
                 ? Number(p.producto.precio) * Number(p.cantidad) -
                   (Number(p?.descuento) > 0

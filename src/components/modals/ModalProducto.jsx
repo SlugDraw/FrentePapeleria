@@ -121,11 +121,15 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
+      const data = {
+        ...values,
+        nombre: values.descripcion.toUpperCase(),
+      };
 
       if (initialValues) {
-        actualizarProductoMutate({ id: initialValues.id, ...values });
+        actualizarProductoMutate({ id: initialValues.id, ...data });
       } else {
-        crearProductoMutate(values);
+        crearProductoMutate(data);
       }
     } catch (error) {
       Swal.fire({
@@ -217,20 +221,20 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
         </Form.Item>
         <svg ref={barcodeRef}></svg>
         <Form.Item
-          name="nombre"
-          label="Nombre"
-          rules={[{ required: true, message: "Por favor ingrese el nombre" }]}
-        >
-          <Input autoComplete="off" />
-        </Form.Item>
-        <Form.Item
           name="descripcion"
           label="Descripción"
           rules={[
             { required: true, message: "Por favor ingrese la descripción" },
           ]}
         >
-          <Input autoComplete="off" />
+          <Input
+            autoComplete="off"
+            onChange={(e) => {
+              form.setFieldsValue({
+                descripcion: e.target.value.toUpperCase(),
+              });
+            }}
+          />
         </Form.Item>
         <Form.Item
           name="precio"
