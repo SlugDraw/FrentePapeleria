@@ -47,9 +47,15 @@ const TicketVenta = (empleado, data, productos) => {
               const subtotal = precio * cantidad;
               const totalConDescuento =
                 descuento > 0 ? subtotal * (1 - descuento / 100) : subtotal;
+              const descripcion =
+                p?.descripcion ??
+                p?.producto?.descripcion ??
+                "Producto Eliminado";
+
+              const texto = `(${cantidad} X $${precio.toFixed(2)}) ${descripcion.toUpperCase()}`;
 
               return [
-                `(${cantidad} X $${precio.toFixed(2)}) ${p?.descripcion?.toUpperCase() || p?.producto?.descripcion?.toUpperCase() || "Producto Eliminado"}`,
+                texto,
                 {
                   text:
                     descuento > 0

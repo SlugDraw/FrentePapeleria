@@ -17,7 +17,15 @@ const listarProductos = async () => {
   return res.json();
 };
 
-const crearProducto = async ({ code, nombre, descripcion, precio, stock }) => {
+const crearProducto = async ({
+  code,
+  nombre,
+  descripcion,
+  precio,
+  stock,
+  minStock,
+  maxStock,
+}) => {
   const token = localStorage.getItem("token");
   const res = await fetch(`${API_URL}/products`, {
     method: "POST",
@@ -25,7 +33,15 @@ const crearProducto = async ({ code, nombre, descripcion, precio, stock }) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ code, nombre, descripcion, precio, stock }),
+    body: JSON.stringify({
+      code,
+      nombre,
+      descripcion,
+      precio,
+      stock,
+      minStock,
+      maxStock,
+    }),
   });
   if (!res.ok) {
     const errorData = await res.json();
@@ -43,6 +59,8 @@ const actualizarProducto = async ({
   descripcion,
   precio,
   stock,
+  minStock,
+  maxStock,
 }) => {
   const token = localStorage.getItem("token");
   const res = await fetch(`${API_URL}/products/${id}`, {
@@ -51,12 +69,20 @@ const actualizarProducto = async ({
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ code, nombre, descripcion, precio, stock }),
+    body: JSON.stringify({
+      code,
+      nombre,
+      descripcion,
+      precio,
+      stock,
+      minStock,
+      maxStock,
+    }),
   });
   if (!res.ok) {
     const errorData = await res.json();
     const error = new Error(
-      errorData.message || "Error al actualizar producto"
+      errorData.message || "Error al actualizar producto",
     );
     error.response = { status: res.status };
     throw error;

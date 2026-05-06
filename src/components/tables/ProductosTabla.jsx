@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Table, Input, Space, Dropdown, Button } from "antd";
+import { Table, Input, Space, Dropdown, Button, Tag } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import ModalProducto from "../modals/ModalProducto";
 import Swal from "sweetalert2";
@@ -16,6 +16,27 @@ const ProductosTabla = ({ data }) => {
   const [editingProduct, setEditingProduct] = useState(null);
   const { logout } = useAuth();
   const queryClient = useQueryClient();
+
+  const getColorSemaforo = (stock, min, max) => {
+    if (min === 0 && max === 0) return "orange";
+    if (stock <= min) return "red";
+    if (stock >= max) return "green";
+    return "yellow";
+  };
+
+  const getEstado = (stock, min, max) => {
+    if (min === 0 && max === 0) return "NO CONFIGURADO";
+    if (stock <= min) return "BAJO";
+    if (stock >= max) return "ALTO";
+    return "OK";
+  };
+
+  const getPrioridad = (stock, min, max) => {
+    if (min === 0 && max === 0) return 0;
+    if (stock <= min) return 1;
+    if (stock >= max) return 3;
+    return 2;
+  };
 
   // Mutación para eliminar
   const { mutate: deleteProduct } = useMutation({
@@ -71,6 +92,29 @@ const ProductosTabla = ({ data }) => {
     },
     { title: "Precio", dataIndex: "precio", key: "precio" },
     { title: "Stock", dataIndex: "stock", key: "stock" },
+    {
+      title: "Estado",
+      key: "estado",
+      sorter: (a, b) =>
+        getPrioridad(a.stock, a.minStock, a.maxStock) -
+        getPrioridad(b.stock, b.minStock, b.maxStock),
+      defaultSortOrder: "ascend",
+      render: (_, record) => {
+        const color = getColorSemaforo(
+          record.stock,
+          record.minStock,
+          record.maxStock,
+        );
+
+        const estado = getEstado(
+          record.stock,
+          record.minStock,
+          record.maxStock,
+        );
+
+        return <Tag color={color}>{estado}</Tag>;
+      },
+    },
     {
       title: "Acciones",
       key: "acciones",

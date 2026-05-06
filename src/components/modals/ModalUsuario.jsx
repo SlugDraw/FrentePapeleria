@@ -75,7 +75,7 @@ const ModalUsuario = ({ visible, onCancel, initialValues }) => {
           username: "",
           password: "",
           rol: "",
-        }
+        },
       );
     }
   }, [visible, initialValues, form]);
@@ -118,6 +118,8 @@ const ModalUsuario = ({ visible, onCancel, initialValues }) => {
         okText={initialValues ? "Actualizar" : "Crear"}
         cancelText="Cancelar"
         confirmLoading={isLoading} // loader en el botón
+        maskClosable={false}
+        keyboard={false}
       >
         <Form form={form} layout="vertical">
           <Form.Item

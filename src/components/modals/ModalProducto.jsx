@@ -105,6 +105,8 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
           descripcion: "",
           precio: "",
           stock: "",
+          minStock: "",
+          maxStock: "",
           code: "",
         },
       );
@@ -121,6 +123,7 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
+      console.log("Valores del formulario:", values);
       const data = {
         ...values,
         nombre: values.descripcion.toUpperCase(),
@@ -129,6 +132,7 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
       if (initialValues) {
         actualizarProductoMutate({ id: initialValues.id, ...data });
       } else {
+        console.log("Creando producto con datos:", data);
         crearProductoMutate(data);
       }
     } catch (error) {
@@ -156,7 +160,7 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
           format: "CODE128",
           lineColor: "#000",
           width: 2,
-          height: 80,
+          height: 40,
           displayValue: true,
         });
       } catch (error) {
@@ -196,6 +200,9 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
       onOk={handleOk}
       okText={initialValues ? "Actualizar" : "Crear"}
       cancelText="Cancelar"
+      maskClosable={false}
+      keyboard={false}
+      height="80%"
     >
       <Form form={form} layout="vertical">
         <Form.Item
@@ -249,6 +256,21 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
           rules={[{ required: true, message: "Por favor ingrese el stock" }]}
         >
           <Input type="number" autoComplete="off" />
+        </Form.Item>
+        <Form.Item
+          name="minStock"
+          label="Stock mínimo (rojo)"
+          rules={[{ required: true, message: "Ingrese el stock mínimo" }]}
+        >
+          <Input type="number" />
+        </Form.Item>
+
+        <Form.Item
+          name="maxStock"
+          label="Stock óptimo (verde)"
+          rules={[{ required: true, message: "Ingrese el stock óptimo" }]}
+        >
+          <Input type="number" />
         </Form.Item>
       </Form>
     </Modal>
