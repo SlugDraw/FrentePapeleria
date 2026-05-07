@@ -6,6 +6,7 @@ pdfMake.vfs = pdfFonts.vfs;
 pdfMake.documentBaseUrl = "";
 
 const TicketVenta = (empleado, data, productos) => {
+  console.time("TicketVenta print");
   const { serial, total, fecha, formaDePago } = data;
 
   const docDefinition = {
@@ -90,45 +91,40 @@ const TicketVenta = (empleado, data, productos) => {
         alignment: "right",
       },
       {
-        text: "Calzada de las Águilas #783",
+        text: "Calzada de las Águilas #783 Col. Ampliación las Águilas",
         alignment: "center",
         fontSize: 6,
         margin: [0, 5, 0, 0],
       },
       {
-        text: "Col. Ampliación las Águilas",
+        text: "* Este ticket no es comprobante fiscal, si requiere factura deberá",
         alignment: "center",
         fontSize: 6,
         margin: [0, 5, 0, 0],
       },
       {
-        text: "Este ticket no es factura, conserve su ticket",
+        text: "solicitarse en el mes de la compra, presentando su ticket",
         alignment: "center",
         fontSize: 6,
-        margin: [0, 5, 0, 0],
+        margin: [0, 0, 0, 0],
       },
       {
-        text: "Este ticket no es comprobante fiscal",
+        text: "* No contamos con cambios ni devoluciones, salvo por defecto de",
         alignment: "center",
         fontSize: 6,
-        margin: [0, 5, 0, 0],
+        margin: [0, 0, 0, 0],
       },
       {
-        text: "Si requiere factura solicitarla unicamente en el mes que realizo su compra",
+        text: "fabricación, no aplica en artículos con daño físico",
         alignment: "center",
         fontSize: 6,
-        margin: [0, 5, 0, 0],
+        margin: [0, 0, 0, 0],
       },
       {
-        text: "Conserve su ticket para cualquier aclaración",
-        alignment: "center",
-        fontSize: 6,
-        margin: [0, 5, 0, 0],
-      },
-      {
-        text: "¡Gracias por su compra!",
+        text: "¡GRACIAS POR SU PREFERENCIA!",
         alignment: "center",
         margin: [0, 8, 0, 0],
+        italics: true,
       },
     ],
     styles: {

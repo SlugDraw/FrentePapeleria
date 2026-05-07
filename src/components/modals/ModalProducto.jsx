@@ -123,7 +123,6 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      console.log("Valores del formulario:", values);
       const data = {
         ...values,
         nombre: values.descripcion.toUpperCase(),
@@ -132,7 +131,6 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
       if (initialValues) {
         actualizarProductoMutate({ id: initialValues.id, ...data });
       } else {
-        console.log("Creando producto con datos:", data);
         crearProductoMutate(data);
       }
     } catch (error) {

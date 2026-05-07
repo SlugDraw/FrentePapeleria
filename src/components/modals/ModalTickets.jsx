@@ -74,6 +74,7 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
           id: item[0].id,
           codigo: values.producto,
           nombre: item[0].nombre,
+          descripcion: item[0].descripcion,
           cantidad: values.cantidad,
           descuento: values.descuento || 0,
           precio: item[0].precio,

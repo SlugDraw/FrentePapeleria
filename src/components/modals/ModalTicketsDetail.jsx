@@ -54,8 +54,6 @@ const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
     }
   }, [error]);
 
-  console.log("Detalle de Venta:", detalleVenta);
-
   return (
     <Modal
       title={<Title level={4}>Detalle de Venta</Title>}
@@ -67,7 +65,6 @@ const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
             className="m-2"
             type="primary"
             onClick={() => {
-              console.log(venta);
               TicketVenta(user.nombre, venta, detalleVenta?.productos);
             }}
           >
