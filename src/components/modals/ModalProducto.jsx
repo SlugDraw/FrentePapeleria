@@ -53,7 +53,7 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
       form.resetFields();
       if (barcodeRef.current) barcodeRef.current.innerHTML = "";
     },
-    onError: (error) => {
+    onError: (error, variables) => {
       if (error.response?.status === 401 || error.response?.status === 403) {
         Swal.fire({
           title: "Sesión expirada",
@@ -63,6 +63,26 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
         }).then(() => {
           logout();
         });
+      }
+
+      if (error.response?.status === 400) {
+        const productos = queryClient.getQueryData(["productos"]) || [];
+        console.log(variables);
+        const codigoBuscado = variables.code;
+        const productoDuplicado = productos.find(
+          (p) => p.code === codigoBuscado,
+        );
+
+        console.log("Producto duplicado encontrado:", productoDuplicado);
+        if (productoDuplicado) {
+          Swal.fire({
+            icon: "error",
+            title: "Error al crear el producto",
+            text:
+              "Producto con el mismo código ya existe: " +
+              productoDuplicado.descripcion.toUpperCase(),
+          });
+        }
       }
     },
   });
@@ -91,6 +111,13 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
             confirmButtonText: "Aceptar",
           }).then(() => {
             logout();
+          });
+        }
+        if (error.response?.status === 400) {
+          Swal.fire({
+            icon: "error",
+            title: "Error al crear el producto",
+            text: error.response.data.message || "Revisa los datos ingresados.",
           });
         }
       },
