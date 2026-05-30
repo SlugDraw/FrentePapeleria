@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { eliminarUsuario } from "../../querys/userQuerys";
 import { useState } from "react";
 import { useAuth } from "../../context/Authcontext";
+import Credencial from "../../tickets/Credencial";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -63,7 +64,7 @@ const UsuariosTabla = ({ data }) => {
     });
   };
 
-  data = Array.isArray(data) ? data : data?.content ?? [];
+  data = Array.isArray(data) ? data : (data?.content ?? []);
   const rolesUnicos = Array.from(new Set(data.map((u) => u.rol)));
 
   const filteredData = data.filter((u) => {
@@ -95,6 +96,11 @@ const UsuariosTabla = ({ data }) => {
               },
               {
                 key: "2",
+                label: "Imprimir Credencial",
+                onClick: () => Credencial(record),
+              },
+              {
+                key: "3",
                 label: <span style={{ color: "red" }}>Eliminar</span>,
                 onClick: () => handleDelete(record.username),
               },
@@ -161,7 +167,7 @@ const UsuariosTabla = ({ data }) => {
           setIdedicion(0);
         }}
         onOk={() => {
-          setModalVisible(false), setEditingUser(null);
+          (setModalVisible(false), setEditingUser(null));
           setIdedicion(0);
         }}
         initialValues={editingUser}

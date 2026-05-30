@@ -1,12 +1,12 @@
-import JsBarcode from "jsbarcode";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
+import JsBarcode from "jsbarcode";
 
 pdfMake.vfs = pdfFonts.vfs;
 
-const TicketCode = async (codigo) => {
+const Credencial = async (empleado) => {
   const canvas = document.createElement("canvas");
-  JsBarcode(canvas, codigo, {
+  JsBarcode(canvas, empleado.codigo, {
     format: "CODE128",
     lineColor: "#000",
     width: 2,
@@ -19,24 +19,46 @@ const TicketCode = async (codigo) => {
   const barcodeImage = canvas.toDataURL("image/png");
 
   const docDefinition = {
-    pageSize: { width: 227, height: "auto" },
-    pageMargins: [5, 5, 5, 5],
+    pageSize: {
+      width: 250,
+      height: 400,
+    },
+    pageMargins: [10, 10, 10, 10],
+
     content: [
       {
-        text: "Ticket de Venta",
+        text: "Delta Papelerías",
+        style: "titulo",
         alignment: "center",
-        fontSize: 12,
-        bold: true,
-        margin: [0, 0, 0, 10],
+      },
+      {
+        text: `Nombre: ${empleado.nombre} ${empleado.apellidos}`,
+        margin: [0, 5],
+      },
+
+      {
+        text: `Rol: ${empleado.rol}`,
+        margin: [0, 5],
       },
       {
         image: barcodeImage,
-        fit: [200, 80],
+        width: 180,
         alignment: "center",
         margin: [0, 0, 0, 5],
       },
-      { text: codigo, alignment: "center", fontSize: 10 },
     ],
+
+    styles: {
+      titulo: {
+        fontSize: 18,
+        bold: true,
+      },
+
+      codigo: {
+        fontSize: 22,
+        bold: true,
+      },
+    },
   };
 
   pdfMake.createPdf(docDefinition).getBlob((blob) => {
@@ -51,4 +73,4 @@ const TicketCode = async (codigo) => {
   });
 };
 
-export default TicketCode;
+export default Credencial;
