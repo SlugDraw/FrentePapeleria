@@ -1,15 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/Authcontext";
 import { useEffect, useState } from "react";
-import {
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  User,
-  NotebookText,
-  Printer,
-  HandCoins,
-} from "lucide-react";
+import { Menu, LogOut } from "lucide-react";
+import { configMenu } from "../pages/ConfigMenu";
 
 export default function Sidebar() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -44,6 +37,10 @@ export default function Sidebar() {
     navigate("/");
   };
 
+  const allowedMenus = configMenu.filter((item) =>
+    item.roles.includes(user?.rol),
+  );
+
   return (
     <aside
       className={`fixed top-0 left-0 h-screen ${
@@ -53,7 +50,9 @@ export default function Sidebar() {
       {/* Botón de colapsar */}
       <div className="flex items-center justify-between p-4">
         {!isCollapsed && (
-          <h2 className="text-lg font-bold">👋 Hola, {user.nombre}</h2>
+          <h2 className="text-lg font-bold">
+            👋 Hola, {user.nombre} ({user.rol})
+          </h2>
         )}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -65,71 +64,51 @@ export default function Sidebar() {
 
       {/* Enlaces */}
       <nav className="flex flex-col space-y-2 mt-6 flex-grow">
-        <Link
-          to="/dashboard"
-          className="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 rounded-md"
-        >
-          <LayoutDashboard size={20} />
-          {!isCollapsed && <span>Dashboard</span>}
-        </Link>
+        {allowedMenus.map((item) => {
+          const Icon = item.icon;
 
-        <div className="relative flex flex-col">
-          <Link
-            to="/caja"
-            onClick={toggleOpen}
-            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 rounded-md"
-          >
-            <HandCoins size={20} />
-            {!isCollapsed && <span>Caja</span>}
-          </Link>
+          // MENU CON SUBMENU
+          if (item.children) {
+            return (
+              <div key={item.label} className="relative flex flex-col">
+                <button
+                  onClick={toggleOpen}
+                  className="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 rounded-md text-left"
+                >
+                  <Icon size={20} />
+                  {!isCollapsed && <span>{item.label}</span>}
+                </button>
 
-          {open && !isCollapsed && (
-            <div className="ml-6 mt-1 flex flex-col bg-gray-800 rounded-md shadow-lg z-10">
-              <Link
-                to="/caja"
-                className="px-4 py-2 hover:bg-gray-700 rounded-md whitespace-nowrap"
-                onClick={() => setOpen(false)} // cerrar al seleccionar
-              >
-                Abrir caja
-              </Link>
-              <Link
-                to="/caja/tickets"
-                className="px-4 py-2 hover:bg-gray-700 rounded-md whitespace-nowrap"
-                onClick={() => setOpen(false)} // cerrar al seleccionar
-              >
-                Consultar tickets
-              </Link>
-            </div>
-          )}
-        </div>
+                {open && !isCollapsed && (
+                  <div className="ml-6 mt-1 flex flex-col bg-gray-800 rounded-md shadow-lg z-10">
+                    {item.children.map((child) => (
+                      <Link
+                        key={child.path}
+                        to={child.path}
+                        className="px-4 py-2 hover:bg-gray-700 rounded-md whitespace-nowrap"
+                        onClick={() => setOpen(false)}
+                      >
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          }
 
-        {rol == "admin" && (
-          <>
+          // MENU NORMAL
+          return (
             <Link
-              to="/usuarios"
+              key={item.path}
+              to={item.path}
               className="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 rounded-md"
             >
-              <User size={20} />
-              {!isCollapsed && <span>Usuarios</span>}
+              <Icon size={20} />
+              {!isCollapsed && <span>{item.label}</span>}
             </Link>
-
-            {/*  <Link
-              to="/impresoras"
-              className="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 rounded-md"
-            >
-              <Printer size={20} />
-              {!isCollapsed && <span>Impresoras</span>}
-            </Link> */}
-
-            <Link
-              to="/productos"
-              className="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 rounded-md"
-            >
-              <NotebookText size={20} />
-              {!isCollapsed && <span>Productos</span>}
-            </Link>
-          </>
-        )}
+          );
+        })}
       </nav>
 
       {/* Logout */}

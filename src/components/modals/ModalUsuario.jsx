@@ -1,15 +1,20 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Modal, Form, Input, Select } from "antd";
 import Swal from "sweetalert2";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Loader from "../../utils/Loader";
 import { crearUsuario, actualizarUsuario } from "../../querys/userQuerys";
 import { useAuth } from "../../context/Authcontext";
+import JsBarcode from "jsbarcode";
+import { BarcodeOutlined } from "@ant-design/icons";
 
 const ModalUsuario = ({ visible, onCancel, initialValues }) => {
   const [form] = Form.useForm();
+  const inputRef = useRef(null);
+  const barcodeRef = useRef(null);
   const queryClient = useQueryClient();
   const { logout } = useAuth();
+  const listadoUsuarios = queryClient.getQueryData(["usuarios"]);
 
   // --- Mutations ---
   const { mutate: crearUsuarioMutate, isLoading: creating } = useMutation({
@@ -75,8 +80,19 @@ const ModalUsuario = ({ visible, onCancel, initialValues }) => {
           username: "",
           password: "",
           rol: "",
+          codigo: "",
         },
       );
+      if (initialValues && initialValues.codigo) {
+        console.log(
+          "Renderizando código de barras para:",
+          initialValues.codigo,
+        );
+        renderBarcode(initialValues.codigo);
+      } else {
+        if (barcodeRef.current) barcodeRef.current.innerHTML = "";
+        if (inputRef.current) inputRef.current.input.value = "";
+      }
     }
   }, [visible, initialValues, form]);
 
@@ -102,7 +118,59 @@ const ModalUsuario = ({ visible, onCancel, initialValues }) => {
 
   const handleCancel = () => {
     form.resetFields();
+    if (barcodeRef.current) barcodeRef.current.innerHTML = "";
+    if (inputRef.current) inputRef.current.input.value = "";
     onCancel();
+  };
+
+  const renderBarcode = (codigo) => {
+    if (barcodeRef.current && codigo) {
+      const limpio = codigo.trim();
+
+      JsBarcode(barcodeRef.current, limpio, {
+        format: "CODE128",
+        lineColor: "#000",
+        width: 2,
+        height: 40,
+        displayValue: true,
+      });
+    } else if (barcodeRef.current) {
+      barcodeRef.current.innerHTML = "";
+    }
+  };
+
+  const generateCodigo = (rol) => {
+    console.log("Generando código para rol:", rol);
+    form.setFieldsValue({ codigo: "" });
+    barcodeRef.current.innerHTML = "";
+    if (typeof rol === "string") {
+      console.log(rol);
+      const prefix = rol.charAt(0).toUpperCase();
+      const count = listadoUsuarios
+        ? listadoUsuarios.filter((u) => u.rol === rol).length + 1
+        : 1;
+      const codigo = `${prefix}${String(count).padStart(4, "0")}`;
+      form.setFieldsValue({ codigo: codigo });
+      renderBarcode(codigo);
+    } else {
+      console.log(listadoUsuarios);
+      const usuario = form.getFieldValue("username");
+      const user = listadoUsuarios?.find((u) => u.username === usuario);
+      const prefix = user.rol.charAt(0).toUpperCase();
+      const usuariosMismoRol = listadoUsuarios.filter(
+        (u) => u.rol === user.rol,
+      );
+
+      const numeros = usuariosMismoRol.map((u) => {
+        const numero = parseInt(u.codigo.replace(prefix, ""));
+        return isNaN(numero) ? 0 : numero;
+      });
+      const maxNumero = Math.max(...numeros, 0);
+      const nuevoNumero = maxNumero + 1;
+      const codigo = `${prefix}${String(nuevoNumero).padStart(4, "0")}`;
+      form.setFieldsValue({ codigo: codigo });
+      renderBarcode(codigo);
+    }
   };
 
   const isLoading = creating || updating;
@@ -168,11 +236,37 @@ const ModalUsuario = ({ visible, onCancel, initialValues }) => {
             label="Rol"
             rules={[{ required: true, message: "Seleccione un rol" }]}
           >
-            <Select placeholder="Seleccione un rol">
+            <Select
+              placeholder="Seleccione un rol"
+              onChange={(value) => generateCodigo(value)}
+            >
               <Select.Option value="admin">Administrador</Select.Option>
+              <Select.Option value="gerente">Gerente</Select.Option>
               <Select.Option value="empleado">Empleado</Select.Option>
             </Select>
           </Form.Item>
+          <Form.Item
+            name="codigo"
+            label="Código de Barras"
+            rules={[{ required: true }]}
+          >
+            <Input
+              ref={inputRef}
+              autoComplete="off"
+              readOnly
+              suffix={
+                <BarcodeOutlined
+                  onClick={initialValues ? generateCodigo : undefined}
+                  style={{
+                    cursor: "pointer",
+                    fontSize: "18px",
+                    color: "#1890ff",
+                  }}
+                />
+              }
+            />
+          </Form.Item>
+          <svg ref={barcodeRef}></svg>
         </Form>
       </Modal>
     </>
