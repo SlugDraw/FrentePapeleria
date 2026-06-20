@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { eliminarProducto } from "../../querys/productQuerys";
 import { useAuth } from "../../context/Authcontext";
 import TicketCode from "../../tickets/TicketCode";
+import DownloadCode from "../../tickets/DowloadCode";
 
 const { Search } = Input;
 
@@ -137,6 +138,11 @@ const ProductosTabla = ({ data }) => {
               },
               {
                 key: "3",
+                label: "Descargar código",
+                onClick: () => DownloadCode(record.code, record.descripcion),
+              },
+              {
+                key: "4",
                 label: <span style={{ color: "red" }}>Eliminar</span>,
                 onClick: () => handleDelete(record.id),
               },
