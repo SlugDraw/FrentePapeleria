@@ -23,6 +23,9 @@ const createTicket = async ({
   caja,
   total,
   formaDePago,
+  empleado,
+  descuentoTotal,
+  pagosMixtos,
 }) => {
   const token = localStorage.getItem("token");
   const res = await fetch(`${API_URL}/sales/ticket`, {
@@ -31,7 +34,16 @@ const createTicket = async ({
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ serial, productos, caja, total, formaDePago }),
+    body: JSON.stringify({
+      serial,
+      productos,
+      caja,
+      total,
+      formaDePago,
+      empleado,
+      descuentoTotal,
+      pagosMixtos,
+    }),
   });
   if (!res.ok) {
     const errorData = await res.json();

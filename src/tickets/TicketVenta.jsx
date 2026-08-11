@@ -7,7 +7,25 @@ pdfMake.documentBaseUrl = "";
 
 const TicketVenta = (empleado, data, productos) => {
   console.time("TicketVenta print");
-  const { serial, total, fecha, formaDePago } = data;
+  const {
+    serial,
+    total,
+    fecha,
+    formaDePago,
+    descuentoTotal = 0,
+    pagosMixtos = [],
+  } = data;
+  const subtotalConDescuentos = productos.reduce((acumulado, producto) => {
+    const precio = Number(producto?.precio || producto?.producto?.precio || 0);
+    const cantidad = Number(producto?.cantidad || 0);
+    const descuento = Number(
+      producto?.descuento || producto?.producto?.descuento || 0,
+    );
+    return acumulado + precio * cantidad * (1 - descuento / 100);
+  }, 0);
+  const importeDescuentoTotal =
+    subtotalConDescuentos * (Number(descuentoTotal) / 100);
+  const esPagoMixto = formaDePago === "Mixto" && pagosMixtos.length > 0;
 
   const docDefinition = {
     pageSize: { width: 226.77, height: "auto" },
@@ -23,6 +41,30 @@ const TicketVenta = (empleado, data, productos) => {
       { text: `${fecha}` },
       { text: `Empleado: ${empleado}` },
       { text: `Forma de pago: ${formaDePago}` },
+      ...(esPagoMixto
+        ? [
+            { text: "Desglose de pago", bold: true, margin: [0, 4, 0, 2] },
+            {
+              table: {
+                widths: ["*", "auto"],
+                body: [
+                  [
+                    { text: "Forma", bold: true },
+                    { text: "Importe", bold: true, alignment: "right" },
+                  ],
+                  ...pagosMixtos.map((pago) => [
+                    pago.formaDePago,
+                    {
+                      text: `$${Number(pago.monto || 0).toFixed(2)}`,
+                      alignment: "right",
+                    },
+                  ]),
+                ],
+              },
+              layout: "noBorders",
+            },
+          ]
+        : []),
       {
         canvas: [{ type: "line", x1: 0, y1: 0, x2: 206, y2: 0, lineWidth: 1 }],
         margin: [0, 5, 0, 5],
@@ -64,7 +106,6 @@ const TicketVenta = (empleado, data, productos) => {
                           {
                             text: `$${subtotal.toFixed(2)} `,
                             decoration: "lineThrough",
-                            color: "#999",
                           },
                           {
                             text: `$${totalConDescuento.toFixed(2)}`,
@@ -85,6 +126,14 @@ const TicketVenta = (empleado, data, productos) => {
         canvas: [{ type: "line", x1: 0, y1: 0, x2: 206, y2: 0, lineWidth: 1 }],
         margin: [0, 5, 0, 5],
       },
+      ...(Number(descuentoTotal) > 0
+        ? [
+            {
+              text: `DESCUENTO TOTAL (${Number(descuentoTotal)}%): -$${importeDescuentoTotal.toFixed(2)}`,
+              alignment: "right",
+            },
+          ]
+        : []),
       {
         text: `TOTAL: $${Number(total).toFixed(2)}`,
         style: "total",
@@ -93,31 +142,31 @@ const TicketVenta = (empleado, data, productos) => {
       {
         text: "Calzada de las Águilas #783 Col. Ampliación las Águilas",
         alignment: "center",
-        fontSize: 6,
+        fontSize: 8,
         margin: [0, 5, 0, 0],
       },
       {
         text: "* Este ticket no es comprobante fiscal, si requiere factura deberá",
         alignment: "center",
-        fontSize: 6,
+        fontSize: 8,
         margin: [0, 5, 0, 0],
       },
       {
         text: "solicitarse en el mes de la compra, presentando su ticket",
         alignment: "center",
-        fontSize: 6,
+        fontSize: 8,
         margin: [0, 0, 0, 0],
       },
       {
         text: "* No contamos con cambios ni devoluciones, salvo por defecto de",
         alignment: "center",
-        fontSize: 6,
+        fontSize: 8,
         margin: [0, 0, 0, 0],
       },
       {
         text: "fabricación, no aplica en artículos con daño físico",
         alignment: "center",
-        fontSize: 6,
+        fontSize: 8,
         margin: [0, 0, 0, 0],
       },
       {
@@ -131,6 +180,7 @@ const TicketVenta = (empleado, data, productos) => {
       header: { fontSize: 14, bold: true },
       total: { fontSize: 12, bold: true },
     },
+    defaultStyle: { color: "#000000" },
   };
 
   pdfMake.createPdf(docDefinition).print();

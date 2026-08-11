@@ -16,11 +16,15 @@ import Swal from "sweetalert2";
 import { useAuth } from "../../context/Authcontext";
 import TicketVenta from "../../tickets/TicketVenta";
 
-const Modaltickets = ({ visible, onCancel, idCaja }) => {
+const FORMAS_DE_PAGO = ["Efectivo", "Tarjeta", "Vales", "Transferencia"];
+
+const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
   const [form] = Form.useForm();
   const [productos, setProductos] = useState([]);
-  const [total, setTotal] = useState(0);
-  const { logout, user } = useAuth();
+  const [descuentoTotal, setDescuentoTotal] = useState(0);
+  const [pagosMixtos, setPagosMixtos] = useState([]);
+  const { logout } = useAuth();
+  const formaDePagoSeleccionada = Form.useWatch("formaDePago", form);
 
   const queryClient = useQueryClient();
 
@@ -30,9 +34,10 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
     if (visible) {
       form.resetFields();
       setProductos([]);
-      setTotal(0);
+      setDescuentoTotal(0);
+      setPagosMixtos([]);
     }
-  }, [visible, form, setProductos, setTotal]);
+  }, [visible, form]);
 
   const {
     data: products,
@@ -55,36 +60,108 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
     },
   });
 
-  const handleAddProducto = () => {
-    const values = form.getFieldsValue();
-    if (values.producto && values.cantidad) {
-      const item = products.filter(
-        (p) => p.code.toString() === values.producto.toString(),
-      );
-      let subtotal = item[0].precio * values.cantidad;
+  const calcularSubtotal = (precio, cantidad, descuento) =>
+    precio * cantidad * (1 - descuento / 100);
 
-      if (values.descuento > 0) {
-        subtotal = subtotal - (subtotal * values.descuento) / 100;
+  const agregarProducto = (producto) => {
+    setProductos((detalleActual) => {
+      const indice = detalleActual.findIndex((item) => item.id === producto.id);
+
+      if (indice === -1) {
+        return [
+          ...detalleActual,
+          {
+            id: producto.id,
+            codigo: producto.code,
+            nombre: producto.nombre,
+            descripcion: producto.descripcion,
+            cantidad: 1,
+            descuento: 0,
+            precio: producto.precio,
+            subtotal: calcularSubtotal(producto.precio, 1, 0),
+          },
+        ];
       }
 
-      setTotal(parseFloat(total) + subtotal);
-      setProductos([
-        ...productos,
-        {
-          id: item[0].id,
-          codigo: values.producto,
-          nombre: item[0].nombre,
-          descripcion: item[0].descripcion,
-          cantidad: values.cantidad,
-          descuento: values.descuento || 0,
-          precio: item[0].precio,
-          subtotal,
-        },
-      ]);
-
-      form.resetFields(["producto", "cantidad", "descuento"]);
-    }
+      return detalleActual.map((item, index) => {
+        if (index !== indice) return item;
+        const cantidad = item.cantidad + 1;
+        return {
+          ...item,
+          cantidad,
+          subtotal: calcularSubtotal(item.precio, cantidad, item.descuento),
+        };
+      });
+    });
   };
+
+  const registrarProducto = (codigo) => {
+    const producto = products?.find(
+      (item) =>
+        item.code.toString().toLowerCase() ===
+        codigo?.toString().trim().toLowerCase(),
+    );
+
+    if (!producto) return false;
+
+    agregarProducto(producto);
+    form.resetFields(["producto"]);
+    return true;
+  };
+
+  const actualizarDetalle = (indice, campo, valor) => {
+    setProductos((detalleActual) =>
+      detalleActual.map((item, index) => {
+        if (index !== indice) return item;
+        const actualizado = { ...item, [campo]: valor };
+        return {
+          ...actualizado,
+          subtotal: calcularSubtotal(
+            actualizado.precio,
+            actualizado.cantidad,
+            actualizado.descuento,
+          ),
+        };
+      }),
+    );
+  };
+
+  const actualizarPagoMixto = (indice, campo, valor) => {
+    setPagosMixtos((pagos) =>
+      pagos.map((pago, index) =>
+        index === indice ? { ...pago, [campo]: valor } : pago,
+      ),
+    );
+  };
+
+  const agregarPagoMixto = () => {
+    setPagosMixtos((pagos) => [
+      ...pagos,
+      { formaDePago: undefined, monto: 0 },
+    ]);
+  };
+
+  const eliminarPagoMixto = (indice) => {
+    setPagosMixtos((pagos) => pagos.filter((_, index) => index !== indice));
+  };
+
+  const cambiarFormaDePago = (formaDePago) => {
+    if (formaDePago === "Mixto") {
+      setPagosMixtos([
+        { formaDePago: undefined, monto: 0 },
+        { formaDePago: undefined, monto: 0 },
+      ]);
+      return;
+    }
+    setPagosMixtos([]);
+  };
+
+  const subtotalProductos = productos.reduce(
+    (acumulado, producto) => acumulado + producto.subtotal,
+    0,
+  );
+  const importeDescuentoTotal = subtotalProductos * (descuentoTotal / 100);
+  const total = subtotalProductos - importeDescuentoTotal;
 
   const handleSave = async () => {
     const formaDePago = form.getFieldValue("formaDePago");
@@ -97,6 +174,37 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
       });
       return;
     }
+
+    if (formaDePago === "Mixto") {
+      const pagosIncompletos = pagosMixtos.some(
+        (pago) => !pago.formaDePago || !pago.monto || pago.monto <= 0,
+      );
+      const formasRepetidas = new Set(
+        pagosMixtos.map((pago) => pago.formaDePago),
+      ).size !== pagosMixtos.length;
+      const totalAsignado = pagosMixtos.reduce(
+        (acumulado, pago) => acumulado + Number(pago.monto || 0),
+        0,
+      );
+
+      if (pagosMixtos.length < 2 || pagosIncompletos || formasRepetidas) {
+        Swal.fire({
+          icon: "warning",
+          title: "Pagos mixtos incompletos",
+          text: "Agrega al menos dos formas de pago distintas e indica un importe válido para cada una.",
+        });
+        return;
+      }
+
+      if (Math.abs(totalAsignado - total) > 0.01) {
+        Swal.fire({
+          icon: "warning",
+          title: "Total pendiente de asignar",
+          text: `Los pagos mixtos suman $${totalAsignado.toFixed(2)} y la venta es de $${total.toFixed(2)}.`,
+        });
+        return;
+      }
+    }
     const prods = productos.map((p) => {
       return { producto: p.id, cantidad: p.cantidad, descuento: p.descuento };
     });
@@ -107,6 +215,9 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
         caja: idCaja,
         total: total,
         formaDePago: formaDePago,
+        empleado: empleado.code,
+        descuentoTotal,
+        pagosMixtos: formaDePago === "Mixto" ? pagosMixtos : [],
       };
       Swal.fire({
         title: "¿Desea continuar con la compra?",
@@ -132,9 +243,8 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
   const { mutate: crearTicketMutate, isLoading: creatingticket } = useMutation({
     mutationKey: ["crearTicket"],
     mutationFn: createTicket,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries(["tickets", idCaja]);
-      setTotal(0);
       form.resetFields();
       Swal.fire({
         title: "Venta registrada",
@@ -145,7 +255,16 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
         cancelButtonText: "No imprimir",
       }).then((result) => {
         if (result.isConfirmed) {
-          TicketVenta(user.nombre, data, productos);
+          TicketVenta(
+            `${empleado.nombre} ${empleado.apellidos}`,
+            {
+              ...data,
+              formaDePago: variables.formaDePago,
+              descuentoTotal: variables.descuentoTotal,
+              pagosMixtos: variables.pagosMixtos,
+            },
+            productos,
+          );
         }
         onCancel(); // Cierra el modal después de la acción
       });
@@ -190,34 +309,35 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
       width="60%"
     >
       <div className="mt-4 flex justify-between items-center border-t pt-3">
+        <Text strong>Subtotal:</Text>
+        <Text className="text-lg font-semibold text-green-600">
+          ${subtotalProductos.toFixed(2)}
+        </Text>
+      </div>
+      {descuentoTotal > 0 && (
+        <div className="mt-1 flex justify-between items-center text-red-600">
+          <Text>Descuento general ({descuentoTotal}%):</Text>
+          <Text>-${importeDescuentoTotal.toFixed(2)}</Text>
+        </div>
+      )}
+      <div className="mt-1 flex justify-between items-center">
         <Text strong>Total:</Text>
         <Text className="text-lg font-semibold text-green-600">
           ${total.toFixed(2)}
         </Text>
       </div>
+      <div className="mt-2 text-sm text-gray-600">
+        Venta realizada por: {empleado?.nombre} {empleado?.apellidos}
+      </div>
       <Form form={form} layout="vertical" requiredMark>
-        {/* Selector de producto con búsqueda */}
+        {/* Un código válido se agrega de inmediato al detalle. */}
         <Form.Item name="producto" label="Producto">
           <Select
             showSearch
-            placeholder="Buscar producto"
+            placeholder="Busca o escanea un producto"
             optionFilterProp="children"
-            onSearch={(value) => {
-              const match = products.find(
-                (p) => p.code.toLowerCase() === value.toLowerCase(),
-              );
-
-              if (match) {
-                form.setFieldsValue({
-                  producto: match.code,
-                  cantidad: 1,
-                  descuento: 0,
-                });
-              }
-            }}
-            onChange={() => {
-              form.setFieldsValue({ cantidad: 1, descuento: 0 });
-            }}
+            onSearch={registrarProducto}
+            onChange={registrarProducto}
             filterOption={(input, option) => {
               const nombre = option?.children?.toLowerCase() || "";
               const code = option?.value?.toLowerCase() || "";
@@ -235,36 +355,6 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
           </Select>
         </Form.Item>
 
-        {/* Cantidad */}
-        <Form.Item
-          name="cantidad"
-          label="Cantidad"
-          rules={[{ required: true, message: "La cantidad es obligatoria" }]}
-        >
-          <InputNumber min={1} precision={0} style={{ width: "100%" }} />
-        </Form.Item>
-
-        {/* Descuentos */}
-        <Form.Item name="descuento" label="Descuento (%)">
-          <InputNumber
-            min={0}
-            max={100}
-            precision={0}
-            style={{ width: "100%" }}
-          />
-        </Form.Item>
-
-        <Form.Item>
-          <Button
-            type="dashed"
-            block
-            onClick={handleAddProducto}
-            className="mt-2"
-          >
-            Agregar Producto
-          </Button>
-        </Form.Item>
-
         {/* Lista de productos agregados */}
         <div className="mt-4 space-y-2 max-h-40 overflow-y-auto">
           {productos.map((p, i) => (
@@ -272,20 +362,48 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
               key={i}
               className="flex justify-between items-center bg-gray-100 p-2 rounded-lg"
             >
-              <span>
-                {p.codigo} - {p.nombre} : {p.cantidad} X {p.precio.toFixed(2)} =
-                ${p.subtotal.toFixed(2)}
-                {p.descuento > 0 && (
-                  <strong style={{ color: "red", marginLeft: 8 }}>
-                    ( {p.descuento}% Descuento )
-                  </strong>
-                )}
-              </span>
+              <div className="flex-1">
+                <span>
+                  {p.codigo} - {p.nombre} : {p.cantidad} X {p.precio.toFixed(2)}{" "}
+                  = ${p.subtotal.toFixed(2)}
+                  {p.descuento > 0 && (
+                    <strong style={{ color: "red", marginLeft: 8 }}>
+                      ( {p.descuento}% Descuento )
+                    </strong>
+                  )}
+                </span>
+                <div className="mt-2 flex flex-wrap gap-3">
+                  <label>
+                    Cantidad
+                    <InputNumber
+                      min={1}
+                      precision={0}
+                      value={p.cantidad}
+                      onChange={(valor) =>
+                        actualizarDetalle(i, "cantidad", valor || 1)
+                      }
+                      className="ml-2"
+                    />
+                  </label>
+                  <label>
+                    Descuento (%)
+                    <InputNumber
+                      min={0}
+                      max={100}
+                      precision={0}
+                      value={p.descuento}
+                      onChange={(valor) =>
+                        actualizarDetalle(i, "descuento", valor || 0)
+                      }
+                      className="ml-2"
+                    />
+                  </label>
+                </div>
+              </div>
               <Button
                 type="link"
                 danger
                 onClick={() => {
-                  setTotal(total - p.subtotal);
                   setProductos(productos.filter((_, index) => index !== i));
                 }}
               >
@@ -297,6 +415,17 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
 
         {/* Se agrega  select de forma de pago*/}
         <div className="mt-4 space-y-2 max-h-40 overflow-y-auto">
+          <Form.Item name="descuentoTotal" label="Descuento general (%)">
+            <InputNumber
+              min={0}
+              max={100}
+              precision={0}
+              placeholder="0"
+              style={{ width: "100%" }}
+              onChange={(valor) => setDescuentoTotal(valor || 0)}
+            />
+          </Form.Item>
+
           <Form.Item
             name="formaDePago"
             label="Forma de Pago"
@@ -307,13 +436,92 @@ const Modaltickets = ({ visible, onCancel, idCaja }) => {
               },
             ]}
           >
-            <Select placeholder="Selecciona una forma de pago">
+            <Select
+              placeholder="Selecciona una forma de pago"
+              onChange={cambiarFormaDePago}
+            >
               <Select.Option value="Efectivo">Efectivo</Select.Option>
-              <Select.Option value="TDC">Tarjeta de Crédito</Select.Option>
-              <Select.Option value="TDD">Tarjeta de Débito</Select.Option>
+              <Select.Option value="Tarjeta">
+                Tarjeta de Débito/Crédito
+              </Select.Option>
+              <Select.Option value="Vales">Vales electrónicos</Select.Option>
               <Select.Option value="Transferencia">Transferencia</Select.Option>
+              <Select.Option value="Mixto">Mixto</Select.Option>
             </Select>
           </Form.Item>
+
+          {formaDePagoSeleccionada === "Mixto" && (
+            <div className="rounded-lg border border-gray-200 p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <Text strong>Distribución de pagos</Text>
+                <Text type="secondary">
+                  Asignado: $
+                  {pagosMixtos
+                    .reduce(
+                      (acumulado, pago) =>
+                        acumulado + Number(pago.monto || 0),
+                      0,
+                    )
+                    .toFixed(2)}
+                  / ${total.toFixed(2)}
+                </Text>
+              </div>
+
+              {pagosMixtos.map((pago, indice) => (
+                <div key={indice} className="mb-2 flex gap-2">
+                  <Select
+                    value={pago.formaDePago}
+                    placeholder="Forma de pago"
+                    className="flex-1"
+                    onChange={(valor) =>
+                      actualizarPagoMixto(indice, "formaDePago", valor)
+                    }
+                  >
+                    {FORMAS_DE_PAGO.filter(
+                      (forma) =>
+                        forma === pago.formaDePago ||
+                        !pagosMixtos.some(
+                          (otroPago, otroIndice) =>
+                            otroIndice !== indice &&
+                            otroPago.formaDePago === forma,
+                        ),
+                    ).map((forma) => (
+                      <Select.Option key={forma} value={forma}>
+                        {forma}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                  <InputNumber
+                    min={0.01}
+                    precision={2}
+                    value={pago.monto}
+                    placeholder="Importe"
+                    className="w-32"
+                    onChange={(valor) =>
+                      actualizarPagoMixto(indice, "monto", valor || 0)
+                    }
+                  />
+                  <Button
+                    danger
+                    type="text"
+                    disabled={pagosMixtos.length <= 2}
+                    onClick={() => eliminarPagoMixto(indice)}
+                  >
+                    Eliminar
+                  </Button>
+                </div>
+              ))}
+
+              <Button
+                type="dashed"
+                block
+                disabled={pagosMixtos.length >= FORMAS_DE_PAGO.length}
+                onClick={agregarPagoMixto}
+              >
+                Agregar forma de pago
+              </Button>
+            </div>
+          )}
         </div>
       </Form>
     </Modal>

@@ -5,6 +5,7 @@ import { Button } from "antd";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { getCajaById, closeSales } from "../querys/salesQuerys";
 import { getTicketsByIdCaja } from "../querys/TicketsQuerys";
+import { listarUsuarios } from "../querys/userQuerys";
 import Loader from "../utils/Loader";
 import TicketTabla from "../components/tables/TicketsTabla";
 import ModalTicket from "../components/modals/ModalTickets";
@@ -14,6 +15,7 @@ const CajaAbierta = () => {
   const { idCaja } = useParams();
   const { isAuthenticated, logout, user } = useAuth();
   const [visible, setVisible] = useState(false);
+  const [empleadoVenta, setEmpleadoVenta] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -67,9 +69,60 @@ const CajaAbierta = () => {
     enabled: !!idCaja,
   });
 
+  const { data: usuarios = [], isLoading: cargandoUsuarios } = useQuery({
+    queryKey: ["usuarios"],
+    queryFn: listarUsuarios,
+  });
+
+  const iniciarNuevaVenta = async () => {
+    if (cargandoUsuarios) {
+      Swal.fire({
+        icon: "info",
+        title: "Cargando empleados",
+        text: "Intenta nuevamente en un momento.",
+      });
+      return;
+    }
+
+    const empleados = (
+      Array.isArray(usuarios) ? usuarios : (usuarios.content ?? [])
+    ).map((empleado) => ({
+      ...empleado,
+      code: empleado.code ?? empleado.codigo,
+    }));
+
+    const resultado = await Swal.fire({
+      title: "Identificar usuario",
+      text: "Ingresa o escanea el código del usuario que realizará la venta.",
+      input: "text",
+      inputPlaceholder: "Código de usuario",
+      showCancelButton: true,
+      confirmButtonText: "Continuar",
+      cancelButtonText: "Cancelar",
+      inputValidator: (valor) => {
+        if (!valor?.trim()) return "El código de usuario es obligatorio.";
+        const empleado = empleados.find(
+          (item) => item.code?.toUpperCase() === valor.trim().toUpperCase(),
+        );
+        if (!empleado)
+          return "El código no corresponde a un usuario registrado.";
+        return undefined;
+      },
+    });
+
+    if (!resultado.isConfirmed) return;
+
+    const empleado = empleados.find(
+      (item) =>
+        item.code?.toUpperCase() === resultado.value.trim().toUpperCase(),
+    );
+    setEmpleadoVenta(empleado);
+    setVisible(true);
+  };
+
   const totalVenta = tickets?.reduce(
     (acc, ticket) => acc + (ticket.total || 0),
-    0
+    0,
   );
 
   const { mutate: closeSale, isLoading: close } = useMutation({
@@ -151,7 +204,7 @@ const CajaAbierta = () => {
 
         {/* Derecha: botones */}
         <div className="flex gap-2">
-          <Button type="primary" onClick={() => setVisible(true)}>
+          <Button type="primary" onClick={iniciarNuevaVenta}>
             Nueva Venta
           </Button>
           <Button danger onClick={() => cerrarCaja(idCaja)}>
@@ -169,6 +222,7 @@ const CajaAbierta = () => {
         onCancel={() => setVisible(false)}
         onOk={() => setVisible(false)}
         idCaja={idCaja}
+        empleado={empleadoVenta}
       />
     </>
   );
