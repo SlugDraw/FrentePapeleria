@@ -24,7 +24,7 @@ export default function Login() {
         nombre: `${data.user.nombre} ${data.user.apellidos}`,
         rol: data.user.rol,
       });
-      navigate("/dashboard");
+      navigate("/caja");
     },
     onError: (error) => {
       Swal.fire({
@@ -50,7 +50,7 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard");
+      navigate("/caja");
     }
   }, [isAuthenticated, navigate]);
 

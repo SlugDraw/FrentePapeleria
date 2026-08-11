@@ -5,7 +5,7 @@ import { Menu, LogOut } from "lucide-react";
 import { configMenu } from "../pages/ConfigMenu";
 
 export default function Sidebar() {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, loading } = useAuth();
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [open, setOpen] = useState(false);
@@ -18,19 +18,12 @@ export default function Sidebar() {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      logout();
-      navigate("/");
-    }
-  }, [isAuthenticated]);
-
   const toggleOpen = (e) => {
     e.preventDefault(); // evitar navegación inmediata
     setOpen((prev) => !prev);
   };
 
-  if (!isAuthenticated) return null;
+  if (loading || !isAuthenticated) return null;
 
   const handleLogout = () => {
     logout();

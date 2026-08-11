@@ -24,14 +24,14 @@ const Layout = () => {
         {/* Login público (no se mueve con sidebar) */}
         <Route path="/" element={<Login />} />
         {/* Rutas protegidas */}
-        <Route
+        {/* <Route
           path="/dashboard"
           element={
             <PrivateRoute>
               <Dashboard />
             </PrivateRoute>
           }
-        />
+        /> */}
         <Route
           path="/usuarios"
           element={
