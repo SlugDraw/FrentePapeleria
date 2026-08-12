@@ -9,7 +9,7 @@ import {
   InputNumber,
 } from "antd";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { listarProductos } from "../../querys/productQuerys";
 import { createTicket } from "../../querys/TicketsQuerys";
 import Swal from "sweetalert2";
@@ -25,6 +25,7 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
   const [pagosMixtos, setPagosMixtos] = useState([]);
   const { logout } = useAuth();
   const formaDePagoSeleccionada = Form.useWatch("formaDePago", form);
+  const selectorProductoRef = useRef(null);
 
   const queryClient = useQueryClient();
 
@@ -36,8 +37,13 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
       setProductos([]);
       setDescuentoTotal(0);
       setPagosMixtos([]);
+      setTimeout(() => selectorProductoRef.current?.focus(), 0);
     }
   }, [visible, form]);
+
+  const enfocarProducto = () => {
+    setTimeout(() => selectorProductoRef.current?.focus(), 0);
+  };
 
   const {
     data: products,
@@ -106,6 +112,7 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
 
     agregarProducto(producto);
     form.resetFields(["producto"]);
+    enfocarProducto();
     return true;
   };
 
@@ -124,6 +131,7 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
         };
       }),
     );
+    enfocarProducto();
   };
 
   const actualizarPagoMixto = (indice, campo, valor) => {
@@ -132,6 +140,7 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
         index === indice ? { ...pago, [campo]: valor } : pago,
       ),
     );
+    enfocarProducto();
   };
 
   const agregarPagoMixto = () => {
@@ -139,10 +148,12 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
       ...pagos,
       { formaDePago: undefined, monto: 0 },
     ]);
+    enfocarProducto();
   };
 
   const eliminarPagoMixto = (indice) => {
     setPagosMixtos((pagos) => pagos.filter((_, index) => index !== indice));
+    enfocarProducto();
   };
 
   const cambiarFormaDePago = (formaDePago) => {
@@ -151,9 +162,11 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
         { formaDePago: undefined, monto: 0 },
         { formaDePago: undefined, monto: 0 },
       ]);
+      enfocarProducto();
       return;
     }
     setPagosMixtos([]);
+    enfocarProducto();
   };
 
   const subtotalProductos = productos.reduce(
@@ -333,6 +346,7 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
         {/* Un código válido se agrega de inmediato al detalle. */}
         <Form.Item name="producto" label="Producto">
           <Select
+            ref={selectorProductoRef}
             showSearch
             placeholder="Busca o escanea un producto"
             optionFilterProp="children"
@@ -375,15 +389,29 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
                 <div className="mt-2 flex flex-wrap gap-3">
                   <label>
                     Cantidad
-                    <InputNumber
-                      min={1}
-                      precision={0}
-                      value={p.cantidad}
-                      onChange={(valor) =>
-                        actualizarDetalle(i, "cantidad", valor || 1)
-                      }
-                      className="ml-2"
-                    />
+                    <span className="ml-2 inline-flex items-center gap-2">
+                      <Button
+                        size="small"
+                        onClick={() =>
+                          actualizarDetalle(
+                            i,
+                            "cantidad",
+                            Math.max(1, p.cantidad - 1),
+                          )
+                        }
+                      >
+                        −
+                      </Button>
+                      <span className="min-w-6 text-center">{p.cantidad}</span>
+                      <Button
+                        size="small"
+                        onClick={() =>
+                          actualizarDetalle(i, "cantidad", p.cantidad + 1)
+                        }
+                      >
+                        +
+                      </Button>
+                    </span>
                   </label>
                   <label>
                     Descuento (%)
@@ -405,6 +433,7 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
                 danger
                 onClick={() => {
                   setProductos(productos.filter((_, index) => index !== i));
+                  enfocarProducto();
                 }}
               >
                 Eliminar
@@ -422,7 +451,10 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
               precision={0}
               placeholder="0"
               style={{ width: "100%" }}
-              onChange={(valor) => setDescuentoTotal(valor || 0)}
+              onChange={(valor) => {
+                setDescuentoTotal(valor || 0);
+                enfocarProducto();
+              }}
             />
           </Form.Item>
 
