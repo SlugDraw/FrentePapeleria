@@ -45,6 +45,13 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
     setTimeout(() => selectorProductoRef.current?.focus(), 0);
   };
 
+  const manejarTeclaDescuento = (evento) => {
+    if (evento.key === "Enter") {
+      evento.preventDefault();
+      enfocarProducto();
+    }
+  };
+
   const {
     data: products,
     isLoading,
@@ -421,8 +428,23 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
                       precision={0}
                       value={p.descuento}
                       onChange={(valor) =>
-                        actualizarDetalle(i, "descuento", valor || 0)
+                        setProductos((detalleActual) =>
+                          detalleActual.map((item, index) => {
+                            if (index !== i) return item;
+                            const descuento = valor || 0;
+                            return {
+                              ...item,
+                              descuento,
+                              subtotal: calcularSubtotal(
+                                item.precio,
+                                item.cantidad,
+                                descuento,
+                              ),
+                            };
+                          }),
+                        )
                       }
+                      onKeyDown={manejarTeclaDescuento}
                       className="ml-2"
                     />
                   </label>
@@ -453,8 +475,8 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
               style={{ width: "100%" }}
               onChange={(valor) => {
                 setDescuentoTotal(valor || 0);
-                enfocarProducto();
               }}
+              onKeyDown={manejarTeclaDescuento}
             />
           </Form.Item>
 
