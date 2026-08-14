@@ -26,6 +26,7 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
   const { logout } = useAuth();
   const formaDePagoSeleccionada = Form.useWatch("formaDePago", form);
   const selectorProductoRef = useRef(null);
+  const listaProductosRef = useRef(null);
 
   const queryClient = useQueryClient();
 
@@ -44,6 +45,13 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
   const enfocarProducto = () => {
     setTimeout(() => selectorProductoRef.current?.focus(), 0);
   };
+
+  useEffect(() => {
+    const listaProductos = listaProductosRef.current;
+    if (visible && listaProductos) {
+      listaProductos.scrollTop = listaProductos.scrollHeight;
+    }
+  }, [productos, visible]);
 
   const manejarTeclaDescuento = (evento) => {
     if (evento.key === "Enter") {
@@ -96,15 +104,22 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
         ];
       }
 
-      return detalleActual.map((item, index) => {
-        if (index !== indice) return item;
-        const cantidad = item.cantidad + 1;
-        return {
-          ...item,
+      const productoExistente = detalleActual[indice];
+      const cantidad = productoExistente.cantidad + 1;
+      const productoActualizado = {
+        ...productoExistente,
+        cantidad,
+        subtotal: calcularSubtotal(
+          productoExistente.precio,
           cantidad,
-          subtotal: calcularSubtotal(item.precio, cantidad, item.descuento),
-        };
-      });
+          productoExistente.descuento,
+        ),
+      };
+
+      return [
+        ...detalleActual.filter((_, index) => index !== indice),
+        productoActualizado,
+      ];
     });
   };
 
@@ -151,10 +166,7 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
   };
 
   const agregarPagoMixto = () => {
-    setPagosMixtos((pagos) => [
-      ...pagos,
-      { formaDePago: undefined, monto: 0 },
-    ]);
+    setPagosMixtos((pagos) => [...pagos, { formaDePago: undefined, monto: 0 }]);
     enfocarProducto();
   };
 
@@ -199,9 +211,9 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
       const pagosIncompletos = pagosMixtos.some(
         (pago) => !pago.formaDePago || !pago.monto || pago.monto <= 0,
       );
-      const formasRepetidas = new Set(
-        pagosMixtos.map((pago) => pago.formaDePago),
-      ).size !== pagosMixtos.length;
+      const formasRepetidas =
+        new Set(pagosMixtos.map((pago) => pago.formaDePago)).size !==
+        pagosMixtos.length;
       const totalAsignado = pagosMixtos.reduce(
         (acumulado, pago) => acumulado + Number(pago.monto || 0),
         0,
@@ -326,7 +338,8 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
       cancelText="Cancelar"
       maskClosable={false}
       keyboard={false}
-      width="60%"
+      width="95%"
+      height="80%"
     >
       <div className="mt-4 flex justify-between items-center border-t pt-3">
         <Text strong>Subtotal:</Text>
@@ -377,7 +390,10 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
         </Form.Item>
 
         {/* Lista de productos agregados */}
-        <div className="mt-4 space-y-2 max-h-40 overflow-y-auto">
+        <div
+          ref={listaProductosRef}
+          className="mt-4 space-y-2 max-h-40 overflow-y-auto"
+        >
           {productos.map((p, i) => (
             <div
               key={i}
@@ -512,8 +528,7 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
                   Asignado: $
                   {pagosMixtos
                     .reduce(
-                      (acumulado, pago) =>
-                        acumulado + Number(pago.monto || 0),
+                      (acumulado, pago) => acumulado + Number(pago.monto || 0),
                       0,
                     )
                     .toFixed(2)}
