@@ -15,6 +15,11 @@ const TicketVenta = (empleado, data, productos) => {
     descuentoTotal = 0,
     pagosMixtos = [],
   } = data;
+  const subtotalSinDescuentos = productos.reduce((acumulado, producto) => {
+    const precio = Number(producto?.precio || producto?.producto?.precio || 0);
+    const cantidad = Number(producto?.cantidad || 0);
+    return acumulado + precio * cantidad;
+  }, 0);
   const subtotalConDescuentos = productos.reduce((acumulado, producto) => {
     const precio = Number(producto?.precio || producto?.producto?.precio || 0);
     const cantidad = Number(producto?.cantidad || 0);
@@ -134,6 +139,11 @@ const TicketVenta = (empleado, data, productos) => {
             },
           ]
         : []),
+      {
+        text: `SUBTOTAL SIN DESCUENTOS: $${subtotalSinDescuentos.toFixed(2)}`,
+        alignment: "right",
+        margin: [0, 4, 0, 0],
+      },
       {
         text: `TOTAL: $${Number(total).toFixed(2)}`,
         style: "total",

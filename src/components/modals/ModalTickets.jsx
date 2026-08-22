@@ -188,6 +188,11 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
     enfocarProducto();
   };
 
+  const subtotalSinDescuentos = productos.reduce((acumulado, producto) => {
+    const precio = Number(producto?.precio ?? producto?.producto?.precio ?? 0);
+    const cantidad = Number(producto?.cantidad ?? 0);
+    return acumulado + precio * cantidad;
+  }, 0);
   const subtotalProductos = productos.reduce(
     (acumulado, producto) => acumulado + producto.subtotal,
     0,
@@ -353,6 +358,10 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
           <Text>-${importeDescuentoTotal.toFixed(2)}</Text>
         </div>
       )}
+      <div className="mt-1 flex justify-between items-center text-gray-700">
+        <Text>Subtotal sin descuentos:</Text>
+        <Text>${subtotalSinDescuentos.toFixed(2)}</Text>
+      </div>
       <div className="mt-1 flex justify-between items-center">
         <Text strong>Total:</Text>
         <Text className="text-lg font-semibold text-green-600">
