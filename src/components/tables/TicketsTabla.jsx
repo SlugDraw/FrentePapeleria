@@ -25,7 +25,18 @@ const TicketTabla = ({ data }) => {
         });
       },
     },
-    { title: "Total", dataIndex: "total", key: "total" },
+    {
+      title: "Total",
+      dataIndex: "total",
+      key: "total",
+      render: (value) => {
+        const total = Number(value);
+        const totalTruncado = Math.trunc(total * 100) / 100;
+        return Number.isFinite(totalTruncado)
+          ? totalTruncado.toFixed(2)
+          : "0.00";
+      },
+    },
     {
       title: "Acciones",
       key: "acciones",

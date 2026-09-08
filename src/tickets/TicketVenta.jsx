@@ -134,7 +134,7 @@ const TicketVenta = (empleado, data, productos) => {
       ...(Number(descuentoTotal) > 0
         ? [
             {
-              text: `DESCUENTO TOTAL (${Number(descuentoTotal)}%): -$${importeDescuentoTotal.toFixed(2)}`,
+              text: `DESCUENTO GENERAL (${Number(descuentoTotal)}%): -$${importeDescuentoTotal.toFixed(2)}`,
               alignment: "right",
             },
           ]

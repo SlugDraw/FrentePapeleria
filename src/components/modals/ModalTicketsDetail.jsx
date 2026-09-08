@@ -11,11 +11,7 @@ const { Title, Text } = Typography;
 const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
   const { isAuthenticated, logout, user } = useAuth();
 
-  const {
-    data: detalleVenta,
-    isLoading,
-    error,
-  } = useQuery({
+  const { data: detalleVenta, error } = useQuery({
     queryKey: ["detalleVenta", venta?.id],
     queryFn: () => getTicketById(venta?.id),
     enabled: !!venta?.id && !!visible,
@@ -32,6 +28,23 @@ const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
       }
     },
   });
+
+  const descuentoGeneral = Number(
+    detalleVenta?.descuentoTotal ?? venta?.descuentoTotal ?? 0,
+  );
+  const subtotalConDescuentos = (detalleVenta?.productos ?? []).reduce(
+    (acumulado, producto) => {
+      const precio = Number(
+        producto?.producto?.precio ?? producto?.precio ?? 0,
+      );
+      const cantidad = Number(producto?.cantidad ?? 0);
+      const descuentoProducto = Number(producto?.descuento ?? 0);
+      return acumulado + precio * cantidad * (1 - descuentoProducto / 100);
+    },
+    0,
+  );
+  const importeDescuentoGeneral =
+    subtotalConDescuentos * (descuentoGeneral / 100);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -128,11 +141,21 @@ const ModalTicketsDetail = ({ visible, onCancel, venta }) => {
         ))}
       </div>
       {/* Total */}
-      <div className="mt-4 flex justify-between items-center border-t pt-3">
-        <Text strong>Total:</Text>
-        <Text className="text-lg font-semibold text-green-600">
-          ${venta?.total.toFixed(2)}
-        </Text>
+      <div className="mt-4 border-t pt-3">
+        {descuentoGeneral > 0 && (
+          <div className="flex justify-between items-center">
+            <Text strong>Descuento general ({descuentoGeneral}%):</Text>
+            <Text className="text-lg font-semibold text-red-600">
+              -${importeDescuentoGeneral.toFixed(2)}
+            </Text>
+          </div>
+        )}
+        <div className="flex justify-between items-center">
+          <Text strong>Total:</Text>
+          <Text className="text-lg font-semibold text-green-600">
+            ${Number(venta?.total ?? 0).toFixed(2)}
+          </Text>
+        </div>
       </div>
     </Modal>
   );
