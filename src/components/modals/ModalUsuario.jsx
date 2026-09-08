@@ -84,10 +84,6 @@ const ModalUsuario = ({ visible, onCancel, initialValues }) => {
         },
       );
       if (initialValues && initialValues.codigo) {
-        console.log(
-          "Renderizando código de barras para:",
-          initialValues.codigo,
-        );
         renderBarcode(initialValues.codigo);
       } else {
         if (barcodeRef.current) barcodeRef.current.innerHTML = "";
@@ -140,11 +136,9 @@ const ModalUsuario = ({ visible, onCancel, initialValues }) => {
   };
 
   const generateCodigo = (rol) => {
-    console.log("Generando código para rol:", rol);
     form.setFieldsValue({ codigo: "" });
     barcodeRef.current.innerHTML = "";
     if (typeof rol === "string") {
-      console.log(rol);
       const prefix = rol.charAt(0).toUpperCase();
       const count = listadoUsuarios
         ? listadoUsuarios.filter((u) => u.rol === rol).length + 1
@@ -153,7 +147,6 @@ const ModalUsuario = ({ visible, onCancel, initialValues }) => {
       form.setFieldsValue({ codigo: codigo });
       renderBarcode(codigo);
     } else {
-      console.log(listadoUsuarios);
       const usuario = form.getFieldValue("username");
       const user = listadoUsuarios?.find((u) => u.username === usuario);
       const prefix = user.rol.charAt(0).toUpperCase();

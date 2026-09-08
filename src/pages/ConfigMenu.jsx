@@ -1,12 +1,12 @@
 import { LayoutDashboard, User, NotebookText, HandCoins } from "lucide-react";
 
 export const configMenu = [
-  /* {
+  {
     label: "Dashboard",
     path: "/dashboard",
     icon: LayoutDashboard,
     roles: ["admin", "gerente", "empleado"],
-  }, */
+  },
   {
     label: "Caja",
     path: "/caja",

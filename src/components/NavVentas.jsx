@@ -1,4 +1,5 @@
 import { CalendarDays, DollarSign } from "lucide-react";
+import { formatDashboardNumber } from "../utils/formatDashboardNumber";
 
 const NavVentas = ({ totalHoy, totalMes }) => {
   return (
@@ -10,9 +11,11 @@ const NavVentas = ({ totalHoy, totalMes }) => {
         <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-2xl shadow-sm">
           <DollarSign className="text-green-600" size={18} />
           <div>
-            <p className="text-xs text-gray-500">Total Ayer (Cajas cerradas)</p>
+            <p className="text-xs text-gray-500">
+              Total Ayer (Tickets vendidos)
+            </p>
             <p className="text-lg font-semibold text-green-700">
-              ${totalHoy.toLocaleString()}
+              ${formatDashboardNumber(totalHoy)}
             </p>
           </div>
         </div>
@@ -21,9 +24,11 @@ const NavVentas = ({ totalHoy, totalMes }) => {
         <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-2xl shadow-sm">
           <CalendarDays className="text-blue-600" size={18} />
           <div>
-            <p className="text-xs text-gray-500">Total Mes (Cajas cerradas)</p>
+            <p className="text-xs text-gray-500">
+              Total Mes (Tickets vendidos)
+            </p>
             <p className="text-lg font-semibold text-blue-700">
-              ${totalMes.toLocaleString()}
+              ${formatDashboardNumber(totalMes)}
             </p>
           </div>
         </div>

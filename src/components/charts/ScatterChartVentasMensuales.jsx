@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
+import { formatDashboardNumber } from "../../utils/formatDashboardNumber";
 
 dayjs.locale("es");
 
@@ -17,7 +18,7 @@ const ScatterChartVentasMensuales = ({ data }) => {
   return (
     <div className="p-6 bg-white rounded-xl shadow-md">
       <h2 className="text-xl font-semibold text-gray-700 mb-4">
-        Ventas Totales por Mes (Cajas cerradas)
+        Ventas Totales por Mes (Tikets vendidos)
       </h2>
 
       <ResponsiveContainer width="100%" height={350}>
@@ -41,10 +42,13 @@ const ScatterChartVentasMensuales = ({ data }) => {
             dataKey="total"
             type="number"
             name="Total Vendido"
-            tickFormatter={(v) => `$${v}`}
+            tickFormatter={(value) => `$${formatDashboardNumber(value)}`}
             tick={{ fontSize: 12 }}
           />
-          <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+          <Tooltip
+            cursor={{ strokeDasharray: "3 3" }}
+            formatter={(value) => `$${formatDashboardNumber(value)}`}
+          />
           <Legend />
           <Scatter
             name="Ventas"

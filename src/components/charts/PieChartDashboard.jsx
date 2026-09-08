@@ -10,6 +10,7 @@ import { useState } from "react";
 import { Spin } from "antd";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
+import { formatDashboardNumber } from "../../utils/formatDashboardNumber";
 dayjs.extend(isBetween);
 
 const COLORS = [
@@ -28,6 +29,8 @@ const COLORS = [
 const PieChartDashboard = ({ filteredData, loading }) => {
   const [activeIndex, setActiveIndex] = useState(null);
   const totalVentas = filteredData.reduce((sum, item) => sum + item.ventas, 0);
+
+  console.log("filteredData en PieChartDashboard:", filteredData);
 
   return (
     <div className="p-6 bg-white rounded-xl shadow-md mt-4">
@@ -65,7 +68,9 @@ const PieChartDashboard = ({ filteredData, loading }) => {
               onMouseLeave={() => setActiveIndex(null)}
               isAnimationActive={true} // Animación
               animationDuration={300} // Duración en ms
-              label={({ name, value }) => `${name}: $${value}`}
+              label={({ name, value }) =>
+                `${name}: $${formatDashboardNumber(value)}`
+              }
             >
               {filteredData.map((entry, index) => (
                 <Cell
@@ -82,9 +87,11 @@ const PieChartDashboard = ({ filteredData, loading }) => {
               dominantBaseline="middle"
               style={{ fontSize: "20px", fontWeight: "bold" }}
             >
-              ${totalVentas}
+              ${formatDashboardNumber(totalVentas)}
             </text>
-            <Tooltip formatter={(value) => `$${value}`} />
+            <Tooltip
+              formatter={(value) => `$${formatDashboardNumber(value)}`}
+            />
             <Legend />
           </PieChart>
         </ResponsiveContainer>

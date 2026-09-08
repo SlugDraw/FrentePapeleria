@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
+import { formatDashboardNumber } from "../../utils/formatDashboardNumber";
 
 dayjs.extend(isBetween);
 
@@ -55,9 +56,11 @@ const ScatterChartVentasEmpleados = ({ data, datosFiltrados }) => {
             dataKey="mes"
             tickFormatter={(m) => dayjs(m).format("MMM YYYY")}
           />
-          <YAxis />
+          <YAxis
+            tickFormatter={(value) => `$${formatDashboardNumber(value)}`}
+          />
           <Tooltip
-            formatter={(value) => `$${value.toLocaleString()}`}
+            formatter={(value) => `$${formatDashboardNumber(value)}`}
             labelFormatter={(label) => dayjs(label).format("MMMM YYYY")}
           />
           <Legend />
