@@ -30,8 +30,6 @@ const PieChartDashboard = ({ filteredData, loading }) => {
   const [activeIndex, setActiveIndex] = useState(null);
   const totalVentas = filteredData.reduce((sum, item) => sum + item.ventas, 0);
 
-  console.log("filteredData en PieChartDashboard:", filteredData);
-
   return (
     <div className="p-6 bg-white rounded-xl shadow-md mt-4">
       <div className="flex justify-start items-center mb-4">

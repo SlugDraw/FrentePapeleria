@@ -10,6 +10,7 @@ import Productos from "../pages/Productos";
 import Caja from "../pages/Caja";
 import CajaAbierta from "../pages/CajaAbierta";
 import Tickets from "../pages/Tickets";
+import Reportes from "../pages/Reportes";
 
 const Layout = () => {
   const { isAuthenticated } = useAuth();
@@ -29,6 +30,14 @@ const Layout = () => {
           element={
             <PrivateRoute>
               <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reportes"
+          element={
+            <PrivateRoute>
+              <Reportes />
             </PrivateRoute>
           }
         />

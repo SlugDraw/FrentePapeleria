@@ -67,13 +67,11 @@ const ModalProducto = ({ visible, onCancel, initialValues }) => {
 
       if (error.response?.status === 400) {
         const productos = queryClient.getQueryData(["productos"]) || [];
-        console.log(variables);
         const codigoBuscado = variables.code;
         const productoDuplicado = productos.find(
           (p) => p.code === codigoBuscado,
         );
 
-        console.log("Producto duplicado encontrado:", productoDuplicado);
         if (productoDuplicado) {
           Swal.fire({
             icon: "error",
