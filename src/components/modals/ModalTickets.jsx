@@ -153,7 +153,6 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
         };
       }),
     );
-    enfocarProducto();
   };
 
   const actualizarPagoMixto = (indice, campo, valor) => {
@@ -420,33 +419,22 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
                 </span>
                 <div className="mt-2 flex flex-wrap gap-3">
                   <label>
-                    Cantidad
-                    <span className="ml-2 inline-flex items-center gap-2">
-                      <Button
-                        size="small"
-                        onClick={() =>
-                          actualizarDetalle(
-                            i,
-                            "cantidad",
-                            Math.max(1, p.cantidad - 1),
-                          )
+                    Cantidad{" "}
+                    <InputNumber
+                      min={1}
+                      precision={0}
+                      value={p.cantidad}
+                      onChange={(valor) => {
+                        if (valor !== null && valor >= 1) {
+                          actualizarDetalle(i, "cantidad", valor);
                         }
-                      >
-                        −
-                      </Button>
-                      <span className="min-w-6 text-center">{p.cantidad}</span>
-                      <Button
-                        size="small"
-                        onClick={() =>
-                          actualizarDetalle(i, "cantidad", p.cantidad + 1)
-                        }
-                      >
-                        +
-                      </Button>
-                    </span>
+                      }}
+                      onPressEnter={enfocarProducto}
+                      className="ml-2"
+                    />
                   </label>
                   <label>
-                    Descuento (%)
+                    Descuento (%){" "}
                     <InputNumber
                       min={0}
                       max={100}
@@ -491,7 +479,11 @@ const Modaltickets = ({ visible, onCancel, idCaja, empleado }) => {
 
         {/* Se agrega  select de forma de pago*/}
         <div className="mt-4 space-y-2 max-h-40 overflow-y-auto">
-          <Form.Item name="descuentoTotal" label="Descuento general (%)">
+          <Form.Item
+            name="descuentoTotal"
+            label="Descuento general (%) "
+            className="mr-1 pr-1"
+          >
             <InputNumber
               min={0}
               max={100}
